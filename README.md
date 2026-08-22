@@ -406,7 +406,7 @@ with `docker compose up -d`:
 | `caddy` | `8030` | optional Basic-auth gateway (expose it to host the OpenAI endpoint externally) |
 | `dcgm-exporter` | — | per-GPU DCGM telemetry sidecar (details in the paragraph below) |
 | `prometheus` | `127.0.0.1:9090` | scrapes `vllm:8000/metrics` + `dcgm-exporter:9400` every 15 s; 30 d retention, loopback-only (remote access via SSH tunnel) |
-| `grafana` | `3000` | dashboard auto-provisioned under folder **vllm** ("vLLM — Qwen3.8-27B (RTX5090)"): running/waiting requests, token throughput, TTFT / E2E / inter-token latency, KV-cache utilization, preemptions, prefix-cache hit ratio |
+| `grafana` | `3000` | dashboard auto-provisioned under folder **vllm** ("vLLM — Qwen3.8-27B (RTX5090)"): running/waiting requests, token throughput, TTFT / E2E / inter-token latency, KV-cache utilization, preemptions, prefix-cache hit ratio, MTP spec-decode acceptance rate / draft rates |
 
 Grafana login: `admin` / `GRAFANA_ADMIN_PASSWORD` from `.env`.
 
