@@ -28,7 +28,7 @@ then from the repo .env — process env wins):
                      falling back to qwen3.8-27b)
   BENCH_SIZES       comma list, default 1024,8192,32768,65536,131072,256000
   BENCH_RUNS        timed runs per size (default 3)
-  BENCH_MAX_TOKENS  completion budget in tokens (default 128)
+  BENCH_MAX_TOKENS  completion budget in tokens (default 256)
   BENCH_TOKENIZER   model tokenizer.json (default: auto-detected under ./models/)
   BENCH_TIMEOUT_S   per-request timeout (default 600)
 
@@ -65,11 +65,15 @@ DEFAULT_SIZES = [1024, 8192, 32768, 65536, 131072, 256000]
 MAX_MODEL_LEN = 262144  # --max-model-len in docker-compose.yml
 
 # Base instruction; the padded corpus is prepended to this.
-# Fixed, controlled completion length (~50-100 tokens) so decode throughput
-# is measurable at every context size.
+# Long controlled completion (READY x 250 ~ 250 tokens): with the default
+# 256-token budget the model runs to the full budget, so the decode phase is
+# long enough to measure sustained single-stream decode throughout the
+# request — a short ~50-token reply diluted the decode measurement and made
+# the engine's 10 s log windows look far slower (few tokens per window) than
+# the per-request decode rate. Same instruction as parallel_bench.py.
 INSTRUCTION = (
     "\n\nYou have now read a long passage of padding text. "
-    "Do not summarize it. Reply with the word READY repeated exactly 50 times, "
+    "Do not summarize it. Reply with the word READY repeated exactly 250 times, "
     "separated by single spaces, and output nothing else."
 )
 
@@ -365,7 +369,7 @@ def main():
     runs = int(cfg("BENCH_RUNS", "3"))
     if runs < 1:
         runs = 1
-    max_tokens = int(cfg("BENCH_MAX_TOKENS", "128"))
+    max_tokens = int(cfg("BENCH_MAX_TOKENS", "256"))
     if args.quick:
         sizes = sizes[:2]
         runs = 1

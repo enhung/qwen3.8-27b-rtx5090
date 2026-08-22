@@ -66,7 +66,7 @@ The weights are pulled into `./models/qwen3.8-27b-nvfp4/` by `setup.sh` and are
 Measured on this stack: 1x RTX 5090 (32 GB), driver `610.43.02`, vLLM 0.27.1,
 NVFP4 weights (~18.8 GB) + FP8 KV cache, `--gpu-memory-utilization 0.95`
 (KV pool ≈ 265K tokens). Single stream, sequential requests, `temperature 0`,
-128-token completion budget, and a unique padding per run — i.e. a cold
+256-token completion budget, and a unique padding per run — i.e. a cold
 prefill: the stack runs with `--enable-prefix-caching`, and any repeat of a
 seen prefix hits the cache instead. Re-measure with:
 
@@ -79,23 +79,25 @@ see the script header. Raw runs land in `benchmarks/results/`).
 
 | context | prompt (tok) | TTFT (s) | prefill (tok/s) | decode (tok/s) | E2E (s) |
 |---|---|---|---|---|---|
-| 1K | 1,086 | 0.07 | 15,785 | 81.5 | 0.58 |
-| 8K | 8,254 | 0.59 | 14,085 | 80.3 | 1.17 |
-| 32K | 32,830 | 3.36 | 9,773 | 78.0 | 3.92 |
-| 64K | 65,598 | 9.58 | 6,845 | 74.9 | 10.23 |
-| 128K | 131,133 | 30.95 | 4,237 | 69.5 | 31.67 |
-| 250K | 256,062 | 104.18 | 2,458 | 61.6 | 104.96 |
+| 1K | 1,087 | 0.07 | 15,104 | 86.0 | 3.04 |
+| 8K | 8,255 | 0.59 | 14,075 | 84.4 | 3.61 |
+| 32K | 32,831 | 3.38 | 9,725 | 81.1 | 6.52 |
+| 64K | 65,598 | 9.63 | 6,814 | 77.3 | 12.93 |
+| 128K | 131,135 | 31.09 | 4,218 | 70.6 | 34.70 |
+| 250K | 256,062 | 104.48 | 2,451 | 60.6 | 108.69 |
 
-Medians of 3 timed runs per size (2026-08-16, `benchmarks/results/`).
+Medians of 3 timed runs per size (2026-08-22, `benchmarks/results/`).
 Prefill throughput falls with context length (quadratic attention + KV
-writes), while decode holds ~80 tok/s up to 32K context and drifts to ~62 at
-the 250K row, where the big KV cache dominates each step. The 250K row is
-256,062 prompt tokens (≈98% of the 262,144 `--max-model-len` cap; the
-completion budget keeps the request inside the ~265K-token KV pool at the
-default `0.95` utilization).
+writes), while decode holds ≈86→81 tok/s out to 32K context and drifts to
+≈61 at the 250K row, where the big KV cache dominates each step. The 250K
+row is 256,062 prompt tokens (≈98% of the 262,144 `--max-model-len` cap;
+the 256-token completion budget keeps the request inside the ~265K-token
+KV pool at the default `0.95` utilization).
 
 With the prefix cache warmed (same padding repeated — the `--cached` flag of
-the suite), only the unseen suffix is prefilled:
+the suite), only the unseen suffix is prefilled (2026-08-16 `--cached`
+run; its cold-TTFT column predates the 2026-08-22 re-measure above —
+re-run `context_bench.py --cached` to refresh):
 
 | context | cold TTFT (s) | cached TTFT (s) |
 |---|---|---|
@@ -148,8 +150,10 @@ Tables from 2026-08-16 (`benchmarks/results/`); the run measured 8K–64K.
 | 2 | 23.44 | 0.09 | 22 | 5,619 | 14.53 | 19.34 | 23.13 | 23.43 | 40.9 |
 | 4 | 45.55 | 0.09 | 22 | 5,783 | 24.23 | 41.88 | 42.14 | 45.52 | 27.9 |
 
-The c=1 rows agree with the single-stream context suite above (~75–78
-tok/s decode). Aggregate output throughput scales near-linearly with
+The c=1 rows agree with the single-stream context suite above
+(≈72–84 tok/s decode depending on context; the 2026-08-16 parallel rows
+read 72–78 while the 2026-08-22 single-stream re-measure reads 77–84 at
+8K–64K). Aggregate output throughput scales near-linearly with
 concurrency at 8K (66 -> 296 tok/s from c=1 to c=16; 9,825 total tok/s
 including the prefilled prompts), while per-request decode speed and TTFT
 degrade as requests queue behind each other's prefill (32K: 34.9 -> 20.6
