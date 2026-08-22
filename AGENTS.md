@@ -58,6 +58,8 @@ Bench scripts need `httpx` (+ optional `tokenizers`), which live in
 | `prometheus` | `127.0.0.1:9090` (fixed, loopback) | Remote access via `ssh -L 9090:localhost:9090` |
 | `dcgm-exporter` | none | Docker-network only (`dcgm-exporter:9400`); external reads via `8030/dcgm/metrics` |
 
+All services run `restart: unless-stopped` — they come back after a crash, but stay stopped after a manual `docker stop`.
+
 Port override keys in `.env`: `VLLM_HOST_PORT` (default 8020), `GATEWAY_HOST_PORT` (default 8030). **Container-side ports are fixed** (`vllm:8000`, `caddy:8030`) — only the host mapping changes. If you also want to move a container port, touch the `ports` block in `docker-compose.yml` *and* the site line in `caddy/Caddyfile` together.
 
 ## Configuration model

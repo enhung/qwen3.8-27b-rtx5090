@@ -8,13 +8,16 @@
 #   VLLM_HOST_PORT      host port for the direct vLLM API (default 8020)
 #   GATEWAY_HOST_PORT   host port for the caddy gateway (default 8030)
 #
+# All services: restart: "unless-stopped" (crash-restart, manual stop stays
+# stopped).
+#
 services:
   vllm:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: ${CONTAINER_NAME:-vllm}
-    restart: "always"
+    restart: "unless-stopped"
     # Host port 8020 (VLLM_HOST_PORT) is the direct full vLLM API
     # (OpenAI-compatible /v1/* plus /metrics, /health and /docs; bearer
     # auth = VLLM_API_KEY on the API routes; open when the key is empty).
@@ -91,7 +94,7 @@ services:
     # auth cannot work without it) — fill .env first on a fresh stack
     image: caddy:2.11.4-alpine
     container_name: caddy-vllm
-    restart: "always"
+    restart: "unless-stopped"
     ports:
       # GATEWAY_HOST_PORT from .env (default 8030); container port stays 8030
       - "${GATEWAY_HOST_PORT:-8030}:8030"
@@ -114,7 +117,7 @@ services:
   prometheus:
     image: prom/prometheus:v3.13.2
     container_name: prometheus
-    restart: "always"
+    restart: "unless-stopped"
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -134,7 +137,7 @@ services:
   grafana:
     image: grafana/grafana:11.1.4
     container_name: grafana
-    restart: "always"
+    restart: "unless-stopped"
     ports:
       - "0.0.0.0:3000:3000"
     environment:
@@ -167,7 +170,7 @@ services:
     build:
       context: dcgm-exporter
     container_name: dcgm-exporter
-    restart: "always"
+    restart: "unless-stopped"
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     deploy:
