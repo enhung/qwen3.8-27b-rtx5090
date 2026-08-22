@@ -32,10 +32,14 @@ RAM/tuning) that actually works on Blackwell — the part that usually takes
 people days to get right (FlashInfer SM120 JIT, `cutlass-dsl`, graph-build
 OOM).
 
-**Target host:** a plain **Ubuntu 24.04/26.04** box (bare metal or VM) — no
-WSL2 or extra container layers in between. The host only needs Docker and a
-datacenter-branch NVIDIA driver; `setup.sh` installs the rest (NVIDIA
-container toolkit), and the image ships its own CUDA toolkit. Once
+**Target host:** a plain **Ubuntu 24.04/26.04** box (bare metal, VM, or
+WSL2 via Docker Desktop) — no extra container layers in between. Bare
+metal / VM: the host only needs Docker and a datacenter-branch NVIDIA
+driver; `setup.sh` installs the rest (NVIDIA container toolkit). WSL2 gets
+its driver from the Windows NVIDIA driver and the NVIDIA runtime from
+Docker Desktop, so the apt-toolkit / `systemctl` steps of `setup.sh` don't
+apply there (they target bare metal / VMs). The image ships its own CUDA
+toolkit either way. Once
 `docker compose up -d` is up, `8020` (direct full API) works immediately;
 `8030` (Basic-auth gateway) serves once `METRICS_HASH` is in `.env`
 (fail-closed by design — see Authentication & exposure).
@@ -108,6 +112,10 @@ RTX 5090:
 - **No other GPU workloads** on the card (agent sessions, other models,
   renders — whatever shows up in `nvidia-smi`). Verify the card is idle
   before enabling MTP mode.
+
+The light mode also runs on WSL2 without a dedicated card. MTP mode
+wants every bit of the VRAM, and under WSL the host desktop shares the
+GPU with Windows, so keep the display off the dGPU there too.
 
 #### Enabling it
 
@@ -256,7 +264,7 @@ and run counts are env-configurable — `BENCH_LEVELS`, `BENCH_CONTEXTS`,
 |---|---|
 | GPU | 1x NVIDIA RTX 5090 (32 GB VRAM) |
 | System RAM | 64 GB minimum, 128 GB recommended (CUDA graph builds are RAM-hungry) |
-| Host | Ubuntu 24.04/26.04, Docker, NVIDIA driver (datacenter branch) |
+| Host | Ubuntu 24.04/26.04, Docker, NVIDIA driver (datacenter branch on bare metal / VM; on WSL2 the Windows NVIDIA driver + Docker Desktop) |
 | Disk | ~20 GB for the model weights, ~10 GB for the Docker image |
 
 The container is fully self-contained (it ships its own CUDA toolkit). On the
