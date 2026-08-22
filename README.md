@@ -7,6 +7,13 @@ served by [vLLM](https://github.com/vllm-project/vllm) with an OpenAI-compatible
 API — one 32 GB card, 256K-token context, reasoning and auto tool choice
 included.
 
+Two serve modes: the base **light** setup (no MTP, 16 concurrent
+sequences, shared-host defaults) and an **MTP speculative-decoding**
+override tuned for ideal usage — at max GPU utilization it even serves
+the full native 256K-token context at ≈120–170 tok/s decode
+(task-dependent). See [Usage modes](#usage-modes) for the switch and the
+headline numbers.
+
 ## Purpose
 
 Who is this for, and why? This repo makes one specific thing work, end to
@@ -61,7 +68,84 @@ The weights are pulled into `./models/qwen3.8-27b-nvfp4/` by `setup.sh` and are
 **not** part of this repository; this repo's tooling is MIT-licensed (see
 `LICENSE.md`).
 
-## Performance
+## Usage modes
+
+Two modes: the base stack is the **light** setup (no MTP, the sensible
+shared-host profile — 16 concurrent sequences at `0.95`); the
+`docker-compose.mtp.yml` override adds **MTP speculative decoding** —
+the model's built-in MTP layers draft 2 tokens per step, roughly
+doubling decode speed. MTP is tuned for ideal usage on a dedicated card:
+the override ships 3 concurrent sequences at `0.965` GPU-memory
+utilization, the full native 256K-token context stays available, and the
+measured single-stream decode rate is ≈120–170 tok/s (task-dependent —
+table below; the bench ran at one concurrent request, so the rate is
+unaffected by the 3-sequence cap).
+
+| mode | command | built-in defaults | when to use |
+|---|---|---|---|
+| Light (default) | `docker compose up -d` | 16 seqs, `0.95` | shared host — display / other workloads OK |
+| MTP (ideal-usage tuning) | `docker compose -f docker-compose.yml -f docker-compose.mtp.yml up -d` | 3 seqs, `0.965` + MTP | dedicated card, fast decode, full 256K context |
+
+No image build is involved — the override replaces only the vllm serve
+command. The `.env` keys `VLLM_MAX_NUM_SEQS` /
+`VLLM_GPU_MEMORY_UTILIZATION` override the built-in defaults, e.g. to
+run MTP on a shared host at the light values (`16` / `0.95`).
+
+### MTP (dedicated card)
+
+MTP mode wants the card reserved for it: `0.965` leaves nearly all of
+the 32 GB for the KV pool (the full native 256K-token context stays
+available under the tuned low concurrency). Nothing else runs on the
+RTX 5090:
+
+- **No display on the RTX 5090.** Do not connect HDMI/DP to it. Run the
+  desktop environment (X/Wayland) on the iGPU if you need one (laptops:
+  "integrated only" graphics mode in the firmware; desktops: plug the
+  display into the iGPU), so the compositor and every GUI app stay out of
+  the 32 GB. (The display server itself only books a few MiB — it is the
+  GUI apps on the dGPU that add up; see the desktop-host note in
+  [First boot & troubleshooting](#first-boot--troubleshooting).)
+- **No other GPU workloads** on the card (agent sessions, other models,
+  renders — whatever shows up in `nvidia-smi`). Verify the card is idle
+  before enabling MTP mode.
+
+#### Enabling it
+
+Run the stack with the MTP override file — only serve flags change, no
+image rebuild needed, no `.env` keys:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.mtp.yml up -d
+```
+
+To deviate from the tuned values — or to run MTP on a shared host at the
+light values (`16` / `0.95`) — set `VLLM_MAX_NUM_SEQS` /
+`VLLM_GPU_MEMORY_UTILIZATION` in `.env` (the keys apply to *both*
+command lists, so a set value follows you into MTP mode). To go back
+to the light shared-host profile, drop the `-f docker-compose.mtp.yml`
+— and if those two keys are set in `.env`, remove them too (otherwise
+the `.env` values keep applying to the base file; with both unset, the
+base defaults `16` / `0.95` kick in).
+
+#### Measured results (MTP, dedicated card)
+
+`benchmarks/context_bench.py` with the MTP override on a card dedicated to
+the stack (2 MTP draft tokens, `--max-num-seqs 2`, `0.965` GPU-memory
+utilization, driver `610.43.02`, 2026-08-22) — 256-token
+completion budget, unique padding per run (cold prefill, since the stack
+runs with prefix caching; re-measure per mode/setup, raw runs land in
+`benchmarks/results/`):
+
+| context | prompt (tok) | TTFT (s) | prefill (tok/s) | decode (tok/s) | E2E (s) |
+|---|---|---|---|---|---|
+| 1K | 1,084 | 0.10 | 11,211 | 169.3 | 1.60 |
+| 8K | 8,253 | 0.66 | 12,593 | 167.1 | 2.18 |
+| 32K | 32,829 | 3.65 | 8,994 | 161.6 | 5.23 |
+| 64K | 65,597 | 10.28 | 6,380 | 153.9 | 11.94 |
+| 128K | 131,133 | 32.68 | 4,013 | 142.1 | 34.47 |
+| 250K | 256,060 | 108.89 | 2,351 | 123.7 | 110.95 |
+
+## Performance (light-mode baseline)
 
 Measured on this stack: 1x RTX 5090 (32 GB), driver `610.43.02`, vLLM 0.27.1,
 NVFP4 weights (~18.8 GB) + FP8 KV cache, `--gpu-memory-utilization 0.95`
@@ -308,7 +392,8 @@ longer takes its share of the 32 GB, so the VRAM is freed up for normal
 operations and other tasks — first and foremost vLLM's KV cache and whatever
 else you run on that card (in the test environment a GNOME shell running on
 the 5090 had ~6 MiB of it booked; every GUI app sitting on the dGPU adds to
-that).
+that). The strict version of this — the card reserved for vLLM entirely,
+nothing else on it — is MTP mode: [MTP (dedicated card)](#mtp-dedicated-card).
 
 ## Monitoring (Prometheus + Grafana)
 
@@ -367,10 +452,13 @@ Most knobs live in `docker-compose.yml`:
 | `VLLM_API_KEY` | from `.env` | empty = no authentication |
 | GPU | 1x, `CUDA_VISIBLE_DEVICES=0` | single RTX 5090 |
 | `MAX_JOBS` / `NVCC_THREADS` | `4` | lower these on machines with less RAM |
-| `--gpu-memory-utilization` | `0.95` | upstream card benchmarks at `0.97` (KV pool ≈ 276K tokens, full 256K); `0.90` holds only ~205K |
+| MTP speculative decoding | off in the base file, on via the `docker-compose.mtp.yml` override | MTP layers draft 2 tokens/step — run: `docker compose -f docker-compose.yml -f docker-compose.mtp.yml up -d`; see [Usage modes](#usage-modes) |
+| `VLLM_GPU_MEMORY_UTILIZATION` | base file: unset = `0.95` (MTP override ships `0.965`) | `.env` key behind `--gpu-memory-utilization`; upstream card benchmarks at `0.97` (KV pool ≈ 276K tokens, full 256K); the MTP override's `0.965` is its dedicated-card ideal-usage tuning |
+| `VLLM_MAX_NUM_SEQS` | base file: unset = `16` (MTP override ships `3`) | `.env` key behind `--max-num-seqs` (max concurrent sequences); the MTP override ships the tuned `3` — deviate via `.env` if needed |
 | `--max-model-len` | `262144` | 256K context |
 | `--kv-cache-dtype` | `fp8` | halves KV cache VRAM, longer contexts |
 | `--trust-remote-code` | — | required by the NVFP4 (modelopt) config |
+| `--speculative-config` | — (base) | in the MTP override it is `{"method": "mtp", "num_speculative_tokens": 2}` (draft length 2, tune to 3 if the workload benefits) |
 | `shm_size` | `16gb` | needed for multi-process workers |
 
 ## Switching the model
@@ -432,7 +520,8 @@ stack, regenerate the lock from a working container:
 ```
 Dockerfile                          vLLM + flashinfer + CUTLASS DSL image (NVFP4)
 requirements.lock                   frozen Python stack of the known-good container (196 packages)
-docker-compose.yml                  service definition (ports, volumes, serve flags)
+docker-compose.yml                  service definition (ports, volumes, serve flags; light mode)
+docker-compose.mtp.yml              MTP override file (ideal-usage tuning: 3 seqs / 0.965, dedicated card)
 setup.sh                            host prerequisites + model download (~20 GB)
 .env.example                        secret template (copy to .env)
 benchmarks/context_bench.py         context-size performance suite (TTFT / prefill / decode per size)

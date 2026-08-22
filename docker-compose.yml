@@ -8,8 +8,20 @@
 #   VLLM_HOST_PORT      host port for the direct vLLM API (default 8020)
 #   GATEWAY_HOST_PORT   host port for the caddy gateway (default 8030)
 #
+# Performance flags (vllm serve command below; the mtp override mirrors the
+# command with its own built-in defaults) are .env-overridable:
+#   VLLM_GPU_MEMORY_UTILIZATION  --gpu-memory-utilization (this file: 0.95)
+#   VLLM_MAX_NUM_SEQS           --max-num-seqs (this file: 16)
+# docker-compose.mtp.yml ships the dedicated-card ideal-usage tuning
+# (3 / 0.965, the shipped full-MTP tuning, ≈120–170 tok/s single-stream
+# decode) and assumes a dedicated card (nothing else on the RTX 5090, no
+# display on it) — see .env.example and the README section "Usage modes".
+#
 # All services: restart: "unless-stopped" (crash-restart, manual stop stays
 # stopped).
+#
+# This base file is the light setup: no MTP. MTP heavy usage = run
+# docker-compose.mtp.yml as an override file.
 #
 services:
   vllm:
@@ -65,9 +77,9 @@ services:
       - --max-model-len
       - "262144"
       - --max-num-seqs
-      - "16"
+      - ${VLLM_MAX_NUM_SEQS:-16}
       - --gpu-memory-utilization
-      - "0.95"
+      - ${VLLM_GPU_MEMORY_UTILIZATION:-0.95}
       - --reasoning-parser
       - qwen3
       - --enable-prefix-caching
