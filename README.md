@@ -381,7 +381,7 @@ the stock Qwen3.8-27B NVFP4 model:
 | `MODEL_SUBDIR` | local weights dir under `./models/` (and the container mount) | `qwen3.8-27b-nvfp4` |
 | `SERVED_MODEL_NAME` | value for `--served-model-name` | `qwen3.8-27b` |
 | `CONTAINER_NAME` | container name | `vllm` |
-| `MODEL_REVISION` | Hugging Face revision to download (weights pin, `setup.sh` only) | `69274a0d…` (known-good, 2026-08-15) |
+| `MODEL_REVISION` | Hugging Face revision to download (weights pin, `setup.sh` only) | `0cc27958…` (known-good, 2026-08-22) |
 
 Set `MODEL_REVISION=` (empty) in `.env` if you rather want `setup.sh` to
 always download the latest weights.
@@ -410,7 +410,7 @@ full lock of the known-good production container (frozen 2026-08-15):
 | CUDA base image | `13.3.1-devel-ubuntu22.04` | `Dockerfile` |
 | huggingface_hub (model download CLI) | `1.27.0` | `setup.sh` |
 | NVIDIA container toolkit | `1.20.0-1` | `setup.sh` |
-| Model weights | HF revision `69274a0d…` | `setup.sh` (override: `MODEL_REVISION`) |
+| Model weights | HF revision `0cc27958…` (2026-08-22) | `setup.sh` (override: `MODEL_REVISION`) |
 | Host driver (tested) | `610.43.02` (RTX 5090) | — |
 | caddy (API gateway, monitoring) | `2.11.4-alpine` | `docker-compose.yml` |
 | dcgm-exporter (GPU metrics sidecar) | `python:3.13-slim` + `nvidia-ml-py 13.610.43` | `dcgm-exporter/Dockerfile` |
