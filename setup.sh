@@ -39,10 +39,10 @@ MODEL_DIR="${MODEL_DIR:-${ROOT_DIR}/models}"
 #   https://huggingface.co/gittensor-model-hub/Qwen3.8-27B-NVFP4-RTX5090
 MODEL_REPO="${MODEL_REPO:-gittensor-model-hub/Qwen3.8-27B-NVFP4-RTX5090}"
 MODEL_SUBDIR="${MODEL_SUBDIR:-qwen3.8-27b-nvfp4}"
-# Weights revision (known-good state, 2026-08-15) — pinned so a re-run always
+# Weights revision (known-good state, 2026-08-22) — pinned so a re-run always
 # fetches exactly what was tested. Override via .env; set MODEL_REVISION=
 # (empty) to always track the latest weights instead.
-MODEL_REVISION="${MODEL_REVISION:-69274a0d8dff5dd35bcee8290612f71e03b6e981}"
+MODEL_REVISION="${MODEL_REVISION:-0cc27958cefbbe231782ec8511de8c4eb5233348}"
 VENV_DIR="${ROOT_DIR}/.venv_download"
 
 mkdir -p "${MODEL_DIR}"

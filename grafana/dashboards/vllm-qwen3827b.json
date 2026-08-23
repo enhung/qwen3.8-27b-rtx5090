@@ -7,7 +7,7 @@
   "refresh": "30s",
   "time": { "from": "now-6h", "to": "now" },
   "schemaVersion": 39,
-  "version": 3,
+  "version": 4,
   "templating": { "list": [] },
   "annotations": {
     "list": [
@@ -164,10 +164,43 @@
       ]
     },
     {
+      "id": 29,
+      "type": "timeseries",
+      "title": "MTP draft acceptance rate (5m)",
+      "description": "MTP speculative decoding (--speculative-config, draft length 2): accepted vs rejected share of the proposed draft tokens (5m rates). Closer to 1.0 means the MTP drafts are almost always accepted.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "red" }, { "color": "orange", "value": 0.5 }, { "color": "green", "value": 0.8 } ] } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(vllm:spec_decode_num_accepted_tokens_total[5m])) / sum(rate(vllm:spec_decode_num_draft_tokens_total[5m]))", "legendFormat": "accepted", "refId": "A" },
+        { "expr": "(sum(rate(vllm:spec_decode_num_draft_tokens_total[5m])) - sum(rate(vllm:spec_decode_num_accepted_tokens_total[5m]))) / sum(rate(vllm:spec_decode_num_draft_tokens_total[5m]))", "legendFormat": "rejected", "refId": "B" },
+        { "expr": "sum by (position) (rate(vllm:spec_decode_num_accepted_tokens_per_pos_total[5m])) / ignoring(position) group_left sum(rate(vllm:spec_decode_num_drafts_total[5m]))", "legendFormat": "pos {{position}}", "refId": "C" }
+      ]
+    },
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "MTP drafts & accepted/rejected tokens (5m)",
+      "description": "How fast the MTP decoder proposes drafts (2 draft tokens per step) and the accepted vs rejected draft-token rates (5m).",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(vllm:spec_decode_num_drafts_total[5m]))", "legendFormat": "drafts/s", "refId": "A" },
+        { "expr": "sum(rate(vllm:spec_decode_num_accepted_tokens_total[5m]))", "legendFormat": "accepted tok/s", "refId": "B" },
+        { "expr": "sum(rate(vllm:spec_decode_num_draft_tokens_total[5m])) - sum(rate(vllm:spec_decode_num_accepted_tokens_total[5m]))", "legendFormat": "rejected tok/s", "refId": "C" }
+      ]
+    },
+    {
       "id": 8,
       "type": "timeseries",
       "title": "Time per output token (decode speed, p50 / p95)",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
@@ -180,7 +213,7 @@
       "id": 9,
       "type": "timeseries",
       "title": "Prefill / decode time (p95)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 36 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
@@ -193,7 +226,7 @@
       "id": 10,
       "type": "timeseries",
       "title": "KV cache utilization",
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 36 },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 44 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "fillOpacity": 10, "lineWidth": 1 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "orange", "value": 80 }, { "color": "red", "value": 95 } ] } },
@@ -206,7 +239,7 @@
       "id": 11,
       "type": "stat",
       "title": "Preemptions (last 1h)",
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 36 },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 44 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "orange", "value": 1 } ] } },
@@ -219,7 +252,7 @@
       "id": 12,
       "type": "gauge",
       "title": "Prefix cache hit ratio (5m)",
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 36 },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 44 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "percentunit", "min": 0, "max": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue" }, { "color": "green", "value": 0.5 } ] } },
@@ -234,7 +267,7 @@
       "id": 13,
       "type": "timeseries",
       "title": "Prompt tokens by source (last 1h)",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 44 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 52 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 50, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "stacking": { "mode": "normal", "show": true } },
@@ -244,7 +277,7 @@
       "id": 14,
       "type": "timeseries",
       "title": "Generated tokens per request (p50 / p95)",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 44 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 52 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
@@ -257,7 +290,7 @@
       "id": 15,
       "type": "timeseries",
       "title": "Scheduler: iterations/s and tokens per iteration",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 52 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 60 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
@@ -271,7 +304,7 @@
       "type": "timeseries",
       "title": "Tokens per day (input / output)",
       "description": "Trailing-24h token volume per day. Bars collapsing to zero mark a vLLM restart (counters reset). Use a wide time range (e.g. 30d) for usage trends.",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 60 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 68 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 50, "lineWidth": 1 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "blue" } ] } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
@@ -284,7 +317,7 @@
       "id": 21,
       "type": "timeseries",
       "title": "GPU utilization (DCGM)",
-      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 68 },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 76 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "fillOpacity": 10, "lineWidth": 1 }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "orange", "value": 80 }, { "color": "red", "value": 95 } ] } },
@@ -297,7 +330,7 @@
       "id": 22,
       "type": "timeseries",
       "title": "GPU memory (MiB)",
-      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 68 },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 76 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "mib", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
@@ -310,7 +343,7 @@
       "id": 23,
       "type": "timeseries",
       "title": "GPU power (W)",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 68 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 76 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "watt", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
@@ -320,7 +353,7 @@
       "id": 24,
       "type": "timeseries",
       "title": "GPU temperature (C)",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 68 },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 76 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "celsius", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
@@ -330,7 +363,7 @@
       "id": 25,
       "type": "timeseries",
       "title": "Failed / aborted requests (per second)",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 76 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 84 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
@@ -343,7 +376,7 @@
       "id": 26,
       "type": "stat",
       "title": "Errors (1h)",
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 76 },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 84 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "red", "value": 1 } ] } },
@@ -356,7 +389,7 @@
       "id": 27,
       "type": "stat",
       "title": "Aborted (1h)",
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 76 },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 84 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "orange", "value": 1 } ] } },

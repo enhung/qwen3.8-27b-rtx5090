@@ -6,13 +6,22 @@
 # the vLLM bearer token) plus metrics routes. Only three paths are
 # routed — everything else falls through to caddy's empty default
 # response.
-# All routed paths require HTTP Basic auth (METRICS_USER / METRICS_HASH
-# from .env; caddy fails closed if METRICS_HASH is unset):
-#   /v1, /v1/*  -> vLLM (caddy translates Basic auth into the vLLM bearer
-#                  token, VLLM_API_KEY from .env, for the upstream call)
-#   /metrics    -> vLLM /metrics (telemetry)
+# Auth per route (METRICS_USER / METRICS_HASH from .env; caddy fails
+# closed if METRICS_HASH is unset):
+#   /v1, /v1/*  -> vLLM, two ways in:
+#                  a) key pass-through: a client carrying the vLLM key
+#                     itself (Authorization: Bearer {$VLLM_API_KEY}) is
+#                     forwarded upstream untouched, no Basic auth — 8020
+#                     parity, so OpenAI-compatible clients can point at
+#                     8030/v1 with the very key they use on 8020
+#                  b) HTTP Basic auth, which caddy translates into the
+#                     vLLM bearer token, VLLM_API_KEY from .env, for the
+#                     upstream call
+#   /metrics    -> vLLM /metrics (telemetry) — Basic auth only
 #   /dcgm/*     -> dcgm-exporter /metrics (per-GPU telemetry, prefix
-#                  stripped: /dcgm/metrics -> /metrics)
+#                  stripped: /dcgm/metrics -> /metrics) — Basic auth only
+#                  (the pass-through route is deliberately /v1-scoped, so
+#                  the telemetry routes stay behind the Basic password)
 #
 # Note (caddy 2.11): `header_up` was renamed — request header changes use
 # `request_header`. And `realm` is not supported in basic_auth here (the line
@@ -26,11 +35,23 @@
 	@v1 {
 		path /v1 /v1/*
 	}
+	# 8020 parity: a request carrying the vLLM key itself skips Basic auth
+	# and is proxied with its Authorization header intact. Listed before
+	# @v1 so it wins; when VLLM_API_KEY is empty the pattern is the 7-char
+	# string "Bearer ", which no real request matches, so /v1* falls back
+	# to Basic auth (and the keyless upstream behavior is unchanged).
+	@v1keyed {
+		path /v1 /v1/*
+		header Authorization "Bearer {$VLLM_API_KEY}"
+	}
 	@metrics {
 		path /metrics
 	}
 	@dcgm {
 		path /dcgm/*
+	}
+	handle @v1keyed {
+		reverse_proxy vllm:8000
 	}
 	handle @v1 {
 		basic_auth {

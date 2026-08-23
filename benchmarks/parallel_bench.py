@@ -81,7 +81,8 @@ DEFAULT_CONTEXTS = [8192, 32768, 65536, 131072]
 # Long controlled completion (READY x 250 ~ 250 tokens): with the default
 # 256-token budget the model runs to the full budget, so the decode phase is
 # long enough to measure sustained aggregate decode rather than a short tail
-# after the prefill (context_bench's INSTRUCTION ends in ~43 tokens).
+# after the prefill. Both suites share this instruction so the reported
+# decode rates are comparable.
 DEFAULT_INSTRUCTION = (
     "\n\nYou have now read a long passage of padding text. "
     "Do not summarize it. Reply with the word READY repeated exactly 250 times, "
@@ -114,9 +115,10 @@ def time_one(base_url, headers, model, padder, context, max_tokens, seed,
     """Run one streaming chat completion, return per-request metrics.
 
     Same measurement scheme as context_bench.run_once (TTFT/E2E from SSE
-    content-chunk timestamps, token counts from the final usage event) but
-    with the longer DEFAULT_INSTRUCTION, so the decode phase stays long
-    enough to measure sustained aggregate decode at high concurrency.
+    content-chunk timestamps, token counts from the final usage event).
+    Both suites share the same long DEFAULT_INSTRUCTION, so the decode
+    phase stays long enough to measure sustained aggregate decode at high
+    concurrency.
     """
     payload = {
         "model": model,

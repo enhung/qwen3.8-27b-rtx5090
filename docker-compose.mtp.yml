@@ -1,0 +1,53 @@
+# docker-compose.mtp.yml
+#
+# Override file for "heavy usage": MTP (multi-token prediction) speculative
+# decoding — the model's built-in MTP layers draft 2 tokens per step. The
+# base docker-compose.yml stays the light setup (no MTP); compose merges this
+# on top of it (the command list is a full replacement, by design):
+#
+#   docker compose -f docker-compose.yml -f docker-compose.mtp.yml up -d
+#
+# This override ships the dedicated-card ideal-usage tuning: 3
+# concurrent sequences at 0.965 GPU-memory utilization (the shipped
+# full-MTP tuning, ≈120–170 tok/s single-stream decode; the base file's
+# light defaults are 16 seqs / 0.95). MTP mode assumes a dedicated card
+# (nothing else on the RTX 5090, no display on it — see the README
+# section "Usage modes"). The .env performance keys
+# (VLLM_GPU_MEMORY_UTILIZATION / VLLM_MAX_NUM_SEQS, see .env.example)
+# override the tuning when set — e.g. the light values for MTP on a
+# shared host.
+services:
+  vllm:
+    command:
+      - --model
+      - /models/${MODEL_SUBDIR:-qwen3.8-27b-nvfp4}
+      - --served-model-name
+      - ${SERVED_MODEL_NAME:-qwen3.8-27b}
+      - --quantization
+      - modelopt
+      - --kv-cache-dtype
+      - fp8
+      - --tensor-parallel-size
+      - "1"
+      - --trust-remote-code
+      # MTP (multi-token prediction) speculative decoding: the model's
+      # built-in MTP layers draft 2 tokens per step
+      # set to 3 if your workload benefits from it
+      - --speculative-config
+      - '{"method": "mtp", "num_speculative_tokens": 2}'
+      - --max-model-len
+      - "262144"
+      - --max-num-seqs
+      - ${VLLM_MAX_NUM_SEQS:-3}
+      - --gpu-memory-utilization
+      - ${VLLM_GPU_MEMORY_UTILIZATION:-0.965}
+      - --reasoning-parser
+      - qwen3
+      - --enable-prefix-caching
+      - --enable-auto-tool-choice
+      - --tool-call-parser
+      - qwen3_xml
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
