@@ -292,6 +292,8 @@ cp .env.example .env
 
 # 3. Build and start (first build takes a while)
 docker compose up -d --build
+# Or start the MTP profile instead (dedicated card — see "Usage modes"):
+# docker compose -f docker-compose.yml -f docker-compose.mtp.yml up -d --build
 
 # 4. Check it serves (open when VLLM_API_KEY is empty; with a key set,
 #    add -H "Authorization: Bearer $VLLM_API_KEY")
