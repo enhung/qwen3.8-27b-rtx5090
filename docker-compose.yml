@@ -91,15 +91,21 @@ services:
       - --port
       - "8000"
 
-  # Optional Basic-auth gateway on host port 8030 (GATEWAY_HOST_PORT; the
-  # vLLM API itself is served directly on 8020, VLLM_HOST_PORT). Expose
-  # 8030 externally (e.g. to host the OpenAI-compatible endpoint behind
-  # Basic auth) — 8020 stays as the direct endpoint. Every routed path requires HTTP Basic auth
-  # (METRICS_USER / METRICS_HASH from .env):
-  #   /v1, /v1/*    -> vLLM (caddy translates Basic auth into the vLLM
-  #                    bearer token, VLLM_API_KEY from .env, upstream)
-  #   /metrics      -> vLLM telemetry
-  #   /dcgm/metrics -> dcgm-exporter /metrics (per-GPU telemetry)
+  # Gateway on host port 8030 (GATEWAY_HOST_PORT; the vLLM API itself is
+  # served directly on 8020, VLLM_HOST_PORT). Expose 8030 externally to
+  # host the OpenAI-compatible endpoint — 8020 stays as the direct
+  # endpoint. Routed paths:
+  #   /v1, /v1/*    -> vLLM — HTTP Basic auth (METRICS_USER / METRICS_HASH
+  #                    from .env; caddy translates it into the vLLM bearer
+  #                    token, VLLM_API_KEY, for the upstream call), OR the
+  #                    vLLM key itself: a client sending
+  #                    Authorization: Bearer <VLLM_API_KEY> passes through
+  #                    untouched (route ordered before the Basic route), so
+  #                    OpenAI-compatible clients can point at 8030/v1 with
+  #                    the same key they use on 8020.
+  #   /metrics      -> vLLM telemetry (Basic auth only)
+  #   /dcgm/metrics -> dcgm-exporter /metrics (per-GPU telemetry, Basic
+  #                    auth only)
   # Everything else falls through to caddy's empty default response.
   caddy:
     # fail-closed: caddy refuses to start if METRICS_HASH is unset (basic
