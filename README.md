@@ -130,7 +130,7 @@ concurrency. Nothing else runs on the RTX 5090:
 
 ## Performance
 
-Measured on this stack: 1x RTX 5090 (32 GB), driver `610.43.02`, vLLM 0.27.1,
+Measured on this stack: 1x RTX 5090 (32 GB), driver `610.43.02`, vLLM 0.28.0,
 NVFP4 weights (~17.1 GB in VRAM) + FP8 KV cache. The single-stream suites run
 sequentially with `temperature 0`, a 256-token completion budget, and a unique
 padding per run — i.e. a cold prefill, because the stack runs with
@@ -148,19 +148,19 @@ header. Raw runs land in `benchmarks/results/`).
 ### Light mode (single-stream baseline)
 
 At the light-mode defaults (`--gpu-memory-utilization 0.95`, KV pool ≈ 265K
-tokens), medians of 3 timed runs per size (2026-08-22, `benchmarks/results/`):
+tokens), medians of 3 timed runs per size (2026-09-06, `benchmarks/results/`):
 
 | context | prompt (tok) | TTFT (s) | prefill (tok/s) | decode (tok/s) | E2E (s) |
 |---|---|---|---|---|---|
-| 1K | 1,087 | 0.07 | 15,104 | 86.0 | 3.04 |
-| 8K | 8,255 | 0.59 | 14,075 | 84.4 | 3.61 |
-| 32K | 32,831 | 3.38 | 9,725 | 81.1 | 6.52 |
-| 64K | 65,598 | 9.63 | 6,814 | 77.3 | 12.93 |
-| 128K | 131,135 | 31.09 | 4,218 | 70.6 | 34.70 |
-| 250K | 256,062 | 104.48 | 2,451 | 60.6 | 108.69 |
+| 1K | 1,087 | 0.07 | 15,153 | 86.7 | 3.01 |
+| 8K | 8,255 | 0.59 | 13,983 | 87.4 | 3.51 |
+| 32K | 32,831 | 3.38 | 9,699 | 83.9 | 6.42 |
+| 64K | 65,599 | 9.65 | 6,800 | 78.7 | 12.89 |
+| 128K | 131,135 | 31.11 | 4,215 | 71.5 | 34.68 |
+| 250K | 256,062 | 104.60 | 2,448 | 60.9 | 108.79 |
 
 Prefill throughput falls with context length (quadratic attention + KV
-writes), while decode holds ≈86→81 tok/s out to 32K context and drifts to
+writes), while decode holds ≈86→84 tok/s out to 32K context and drifts to
 ≈61 at the 250K row, where the big KV cache dominates each step. The 250K
 row is 256,062 prompt tokens (≈98% of the 262,144 `--max-model-len` cap;
 the 256-token completion budget keeps the request inside the ~265K-token
@@ -171,7 +171,7 @@ KV pool at the default `0.95` utilization).
 Single-stream `benchmarks/context_bench.py` on a card dedicated to the
 stack, run with the MTP override (MTP-2 draft tokens, `--max-num-seqs 3`
 — the shipped MTP default — and `0.965` GPU-memory utilization), driver
-`610.43.02`, 2026-08-22. Medians
+`610.43.02`, 2026-09-05. Medians
 of 3 timed runs per size, 256-token completion budget, unique padding per
 run — the stack runs with prefix caching, so the rotating padding keeps the
 prefill cold; the single-stream rate is unaffected by the 3-sequence cap
@@ -179,19 +179,19 @@ prefill cold; the single-stream rate is unaffected by the 3-sequence cap
 
 | context | prompt (tok) | TTFT (s) | prefill (tok/s) | decode (tok/s) | E2E (s) |
 |---|---|---|---|---|---|
-| 1K | 1,084 | 0.10 | 11,211 | 169.3 | 1.60 |
-| 8K | 8,253 | 0.66 | 12,593 | 167.1 | 2.18 |
-| 32K | 32,829 | 3.65 | 8,994 | 161.6 | 5.23 |
-| 64K | 65,597 | 10.28 | 6,380 | 153.9 | 11.94 |
-| 128K | 131,133 | 32.68 | 4,013 | 142.1 | 34.47 |
-| 250K | 256,060 | 108.89 | 2,351 | 123.7 | 110.95 |
+| 1K | 1,087 | 0.09 | 12,696 | 182.3 | 1.48 |
+| 8K | 8,255 | 0.63 | 13,116 | 183.4 | 2.02 |
+| 32K | 32,831 | 3.63 | 9,055 | 176.3 | 5.09 |
+| 64K | 65,599 | 10.27 | 6,389 | 170.5 | 11.76 |
+| 128K | 131,135 | 33.27 | 3,942 | 153.7 | 34.93 |
+| 250K | 256,062 | 109.32 | 2,342 | 139.7 | 111.15 |
 
 ### Prefix-cache effect
 
 With the prefix cache warmed (same padding repeated — the suite's
 `--cached` flag), only the unseen suffix is prefilled. Medians of 3 timed
 cold runs + the 1 `--cached` run per size (2026-08-16 run; its cold-TTFT
-column predates the 2026-08-22 re-measure above — re-run
+column predates the 2026-09-06 re-measure above — re-run
 `context_bench.py --cached` to refresh):
 
 | context | cold TTFT (s) | cached TTFT (s) |
@@ -217,47 +217,54 @@ batch (`level x (context + 256-token completion)`) exceeds the ~265K-token
 KV pool — c=16 fits only at 8K, c=8 up to 32K, c=4 up to 64K, c=2 up to
 128K — so no batch preempts.
 
-Tables from 2026-08-16 (`benchmarks/results/`); the 128K levels produced
-no timed batches in that run, so only 8K–64K are shown.
+Tables from 2026-09-06 (`benchmarks/results/`); the 128K context is
+covered up to c=2 (c=4 and up would push the whole batch past the
+~265K-token KV pool, so the suite skips those levels).
 
 **8K context**
 
 | concurrency | wall (s) | req/s | output (tok/s) | total (tok/s) | TTFT p50 (s) | TTFT p95 (s) | E2E p50 (s) | E2E p95 (s) | decode (tok/s/req) |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | 3.86 | 0.26 | 66 | 2,207 | 0.60 | 0.60 | 3.85 | 3.85 | 78.3 |
-| 2 | 4.81 | 0.42 | 106 | 3,537 | 0.96 | 1.18 | 4.78 | 4.81 | 66.9 |
-| 4 | 6.16 | 0.65 | 166 | 5,525 | 1.62 | 2.35 | 6.05 | 6.15 | 57.8 |
-| 8 | 8.55 | 0.94 | 239 | 7,963 | 2.79 | 4.72 | 8.29 | 8.54 | 48.4 |
-| 16 | 13.86 | 1.15 | 296 | 9,825 | 5.17 | 9.39 | 13.31 | 13.81 | 34.7 |
+| 1 | 3.55 | 0.28 | 72 | 2,401 | 0.59 | 0.59 | 3.54 | 3.54 | 86.7 |
+| 2 | 4.54 | 0.44 | 113 | 3,754 | 0.95 | 1.17 | 4.50 | 4.53 | 72.0 |
+| 4 | 5.91 | 0.68 | 173 | 5,762 | 1.61 | 2.35 | 5.81 | 5.90 | 61.3 |
+| 8 | 8.28 | 0.97 | 247 | 8,222 | 2.80 | 4.73 | 8.04 | 8.26 | 51.2 |
+| 16 | 13.61 | 1.18 | 301 | 10,010 | 5.19 | 9.41 | 13.09 | 13.56 | 36.1 |
 
 **32K context**
 
 | concurrency | wall (s) | req/s | output (tok/s) | total (tok/s) | TTFT p50 (s) | TTFT p95 (s) | E2E p50 (s) | E2E p95 (s) | decode (tok/s/req) |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | 6.79 | 0.15 | 38 | 4,871 | 3.41 | 3.41 | 6.79 | 6.79 | 75.4 |
-| 2 | 10.64 | 0.19 | 48 | 6,219 | 5.12 | 6.79 | 10.49 | 10.63 | 51.7 |
-| 4 | 17.83 | 0.22 | 57 | 7,423 | 8.56 | 13.64 | 17.38 | 17.82 | 34.9 |
-| 8 | 37.10 | 0.22 | 55 | 7,134 | 15.45 | 33.23 | 34.00 | 37.07 | 20.6 |
+| 1 | 6.44 | 0.16 | 40 | 5,135 | 3.40 | 3.40 | 6.44 | 6.47 | 83.5 |
+| 2 | 10.38 | 0.19 | 49 | 6,375 | 5.13 | 6.80 | 10.24 | 10.37 | 54.8 |
+| 4 | 17.59 | 0.23 | 58 | 7,525 | 8.56 | 13.65 | 17.18 | 17.58 | 36.3 |
+| 8 | 31.78 | 0.25 | 64 | 8,329 | 15.46 | 27.59 | 30.73 | 31.75 | 23.4 |
 
 **64K context**
 
 | concurrency | wall (s) | req/s | output (tok/s) | total (tok/s) | TTFT p50 (s) | TTFT p95 (s) | E2E p50 (s) | E2E p95 (s) | decode (tok/s/req) |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | 13.22 | 0.08 | 19 | 4,982 | 9.67 | 9.67 | 13.21 | 13.21 | 72.1 |
-| 2 | 23.44 | 0.09 | 22 | 5,619 | 14.53 | 19.34 | 23.13 | 23.43 | 40.9 |
-| 4 | 45.55 | 0.09 | 22 | 5,783 | 24.23 | 41.88 | 42.14 | 45.52 | 27.9 |
+| 1 | 12.88 | 0.08 | 20 | 5,115 | 9.67 | 9.67 | 12.87 | 12.87 | 79.7 |
+| 2 | 23.19 | 0.09 | 22 | 5,681 | 14.53 | 19.35 | 22.91 | 23.17 | 43.2 |
+| 4 | 43.24 | 0.09 | 24 | 6,092 | 24.29 | 38.92 | 42.35 | 43.21 | 24.4 |
+
+**128K context**
+
+| concurrency | wall (s) | req/s | output (tok/s) | total (tok/s) | TTFT p50 (s) | TTFT p95 (s) | E2E p50 (s) | E2E p95 (s) | decode (tok/s/req) |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 34.66 | 0.03 | 7 | 3,791 | 31.12 | 31.13 | 34.64 | 34.65 | 72.4 |
+| 2 | 66.69 | 0.03 | 8 | 3,940 | 46.80 | 62.42 | 66.09 | 66.68 | 33.7 |
 
 The c=1 rows agree with the single-stream context suite above
-(≈72–84 tok/s decode depending on context; the 2026-08-16 parallel rows
-read 72–78 while the 2026-08-22 single-stream re-measure reads 77–84 at
-8K–64K). Aggregate output throughput scales near-linearly with
-concurrency at 8K (66 -> 296 tok/s from c=1 to c=16; 9,825 total tok/s
-including the prefilled prompts), while per-request decode speed and TTFT
-degrade as requests queue behind each other's prefill (32K: 34.9 -> 20.6
-tok/s/req and TTFT p95 13.6 -> 33.2 s from c=4 to c=8; past its peak the
-aggregate output throughput even dips slightly at 32K). Measured on
-a shared host: other GPU workloads (including the agent sessions served by
-this very stack) can shift the numbers a bit. Re-measure with
+(72–87 tok/s decode at 8K–128K; the two suites now sit within ≈1 tok/s
+of each other per context). Aggregate output throughput scales
+near-linearly with concurrency at 8K (72 -> 301 tok/s from c=1 to c=16;
+10,010 total tok/s including the prefilled prompts), while per-request
+decode speed and TTFT degrade as requests queue behind each other's
+prefill (32K: 36.3 -> 23.4 tok/s/req and TTFT p95 13.6 -> 27.6 s from
+c=4 to c=8). Measured on a shared host: other GPU workloads (including
+the agent sessions served by this very stack) can shift the numbers a
+bit. Re-measure with
 `.venv_download/bin/python benchmarks/parallel_bench.py` (levels, contexts,
 and run counts are env-configurable — `BENCH_LEVELS`, `BENCH_CONTEXTS`,
 `BENCH_RUNS`; `--quick` for a fast sanity check; raw runs land in
