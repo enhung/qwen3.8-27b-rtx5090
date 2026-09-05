@@ -42,7 +42,7 @@ Bench scripts need `httpx` (+ optional `tokenizers`), which live in
 | `setup.sh` | Installs pinned `nvidia-container-toolkit==1.20.0-1`, creates `.venv_download/`, downloads weights into `./models/<MODEL_SUBDIR>/` via pinned `huggingface_hub[cli]==1.27.0` `hf download` |
 | `.env.example` | Template for `.env`; `docker compose` **and** `setup.sh` both read it |
 | `caddy/Caddyfile` | gateway on container port 8030: `/v1/*` (Basic → bearer translation, or the vLLM key passed through as-is for 8020 parity), `/metrics`, `/dcgm/metrics` (Basic only) |
-| `prometheus/prometheus.yml` | Scrapes `vllm:8000/metrics` + `dcgm-exporter:9400` every 15 s, 30 d retention |
+| `prometheus/prometheus.yml` | Scrapes `vllm:8000/metrics` + `dcgm-exporter:9400` every 5 s, 1 y retention |
 | `grafana/` | Auto-provisioned datasource + dashboard `vllm-qwen3827b.json` (folder **vllm**) |
 | `dcgm-exporter/` | Minimal NVML→Prometheus sidecar (public base image + `nvidia-ml-py` — no NGC login needed). Swap for `image: nvcr.io/nvidia/dcgm-exporter:3.3.9-3.6.0-ubuntu22.04` if you have NGC access |
 | `benchmarks/` | `context_bench.py` (TTFT/prefill/decode per context size) and `parallel_bench.py` (aggregate throughput vs concurrency); raw runs in `results/` |

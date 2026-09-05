@@ -357,7 +357,7 @@ loopback-only):
 | `:8020` | direct full vLLM API — OpenAI-compatible `/v1/*` plus `/metrics`, `/health`, `/docs` | `VLLM_API_KEY` empty → **fully open (LAN-use only!)**; key set → bearer on `/v1/*`, while `/metrics`, `/health`, `/docs` stay open by vLLM design |
 | `:8030` | caddy gateway — routes `/v1/*` (Basic auth translated into the vLLM bearer key upstream, or the vLLM bearer key itself passed through — 8020 parity), `/metrics` (vLLM telemetry), `/dcgm/metrics` (per-GPU DCGM telemetry) | `/v1/*`: HTTP Basic (`METRICS_USER` / `METRICS_PASSWORD` from `.env`) **or** the vLLM bearer key; `/metrics`, `/dcgm/*`: Basic only |
 | `:3000` | Grafana UI | open on all interfaces; protected by the Grafana admin password (sign-ups disabled) |
-| `127.0.0.1:9090` | Prometheus (30 d retention) | loopback only — from a remote host, open an `ssh -L 9090:localhost:9090` tunnel first |
+| `127.0.0.1:9090` | Prometheus (1 y retention) | loopback only — from a remote host, open an `ssh -L 9090:localhost:9090` tunnel first |
 
 Notes:
 
@@ -430,7 +430,7 @@ with `docker compose up -d`:
 | `vllm` | `8020` | direct full API access (auth per [Authentication & exposure](#authentication--exposure)); caddy (8030) and Prometheus also reach it on the docker network (`vllm:8000`) |
 | `caddy` | `8030` | optional gateway (expose it to host the OpenAI endpoint externally): Basic auth; the plain vLLM key is also accepted on `/v1/*` |
 | `dcgm-exporter` | — | per-GPU DCGM telemetry sidecar (details in the paragraph below) |
-| `prometheus` | `127.0.0.1:9090` | scrapes `vllm:8000/metrics` + `dcgm-exporter:9400` every 15 s; 30 d retention, loopback-only (remote access via SSH tunnel) |
+| `prometheus` | `127.0.0.1:9090` | scrapes `vllm:8000/metrics` + `dcgm-exporter:9400` every 5 s; 1 y retention, loopback-only (remote access via SSH tunnel) |
 | `grafana` | `3000` | dashboard auto-provisioned under folder **vllm** ("vLLM — Qwen3.8-27B (RTX5090)"): running/waiting requests, token throughput, TTFT / E2E / inter-token latency, KV-cache utilization, preemptions, prefix-cache hit ratio, MTP spec-decode acceptance rate / draft rates |
 
 Grafana login: `admin` / `GRAFANA_ADMIN_PASSWORD` from `.env`.
