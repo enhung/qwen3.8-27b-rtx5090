@@ -431,7 +431,7 @@ with `docker compose up -d`:
 | `caddy` | `8030` | optional gateway (expose it to host the OpenAI endpoint externally): Basic auth; the plain vLLM key is also accepted on `/v1/*` |
 | `dcgm-exporter` | — | per-GPU DCGM telemetry sidecar (details in the paragraph below) |
 | `prometheus` | `127.0.0.1:9090` | scrapes `vllm:8000/metrics` + `dcgm-exporter:9400` every 5 s; 1 y retention, loopback-only (remote access via SSH tunnel) |
-| `grafana` | `3000` | dashboard auto-provisioned under folder **vllm** ("vLLM — Qwen3.8-27B (RTX5090)"): running/waiting requests, token throughput, TTFT / E2E / inter-token latency, KV-cache utilization, preemptions, prefix-cache hit ratio, MTP spec-decode acceptance rate / draft rates |
+| `grafana` | `3000` | dashboard auto-provisioned under folder **vllm** ("vLLM — Qwen3.8-27B (RTX5090)"): running/waiting requests, token throughput, cost in USD (defaults $0.28/1M in, $3.00/1M out, $0.10/1M cache read — OpenRouter `qwen/qwen3.8-27b` provider prices listed in the variable descriptions — adjustable via the `price_in_mtok` / `price_out_mtok` / `cache_price_mtok` dashboard variables, plus the average input/output tokens-per-request stat pair for per-request cost context), per-request prompt (context) size p50/p95, queue/wait time p50/p95, in-flight requests (running + waiting), prefill computed-vs-cached split, TTFT / E2E / inter-token latency, KV-cache utilization, preemptions, prefix-cache hit ratio, MTP spec-decode acceptance rate / draft rates |
 
 Grafana login: `admin` / `GRAFANA_ADMIN_PASSWORD` from `.env`.
 
