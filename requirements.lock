@@ -1,6 +1,6 @@
 # Pinned Python stack for the vLLM Docker image (full freeze, 196 packages).
-# Top-level: vllm==0.27.1, flashinfer-python==0.6.16.post3, nvidia-cutlass-dsl==4.6.0
-# Source: `uv pip freeze` of the running production container, frozen 2026-08-15.
+# Top-level: vllm==0.28.0, flashinfer-python==0.6.16.post3, nvidia-cutlass-dsl==4.6.2
+# Source: `uv pip freeze` of venv upgraded from the 2026-08-15 production freeze; vllm 0.28.0, frozen 2026-09-04.
 # To update: docker exec -it <container> sh -c 'cd /app && uv pip freeze'
 # (keep only the package==version lines), test, and commit.
 
@@ -57,7 +57,7 @@ httptools==0.8.0
 httpx==0.28.1
 httpx2==2.10.0
 huggingface-hub==1.27.0
-humming-kernels==0.1.10
+humming-kernels==0.1.12
 idna==3.18
 ijson==3.5.1
 interegular==0.3.3
@@ -103,11 +103,11 @@ nvidia-curand==10.4.2.55
 nvidia-cusolver==12.2.0.1
 nvidia-cusparse==12.7.10.1
 nvidia-cusparselt-cu13==0.8.1
-nvidia-cutlass-dsl==4.6.0
-nvidia-cutlass-dsl-libs-base==4.6.0
-nvidia-cutlass-dsl-libs-core==4.6.0
-nvidia-cutlass-dsl-libs-cu12==4.6.0
-nvidia-cutlass-dsl-libs-cu13==4.6.0
+nvidia-cutlass-dsl==4.6.2
+nvidia-cutlass-dsl-libs-base==4.6.2
+nvidia-cutlass-dsl-libs-core==4.6.2
+nvidia-cutlass-dsl-libs-cu12==4.6.2
+nvidia-cutlass-dsl-libs-cu13==4.6.2
 nvidia-ml-py==13.610.43
 nvidia-nccl-cu13==2.29.7
 nvidia-nvjitlink==13.3.33
@@ -153,7 +153,7 @@ python-json-logger==4.1.0
 python-multipart==0.0.32
 pyyaml==6.0.3
 pyzmq==27.1.0
-quack-kernels==0.6.1
+quack-kernels==0.6.4
 referencing==0.37.0
 regex==2026.7.19
 requests==2.34.2
@@ -194,7 +194,7 @@ typing-inspection==0.4.4
 urllib3==2.7.0
 uvicorn==0.52.3
 uvloop==0.22.1
-vllm==0.27.1
+vllm==0.28.0
 watchfiles==1.2.0
 websockets==17.0.1
 xgrammar==0.2.3

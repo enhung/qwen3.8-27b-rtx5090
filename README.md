@@ -514,11 +514,12 @@ file, e.g. `mymodel.yml`, and run
 ## Pinned versions
 
 Everything that could break a rebuild is pinned — the Python stack is the
-full lock of the known-good production container (frozen 2026-08-15):
+full lock of the known-good production container (frozen 2026-08-15, vllm
+bumped to 0.28.0 on 2026-09-04):
 
 | Input | Pinned | Where |
 |---|---|---|
-| vLLM stack (vllm 0.27.1, FlashInfer, CUTLASS DSL, torch, … 196 packages) | `requirements.lock` | `Dockerfile` |
+| vLLM stack (vllm 0.28.0, FlashInfer, CUTLASS DSL, torch, … 196 packages) | `requirements.lock` | `Dockerfile` |
 | uv / Python | `0.12.5` / `3.13.15` | `Dockerfile` |
 | CUDA base image | `13.3.1-devel-ubuntu22.04` | `Dockerfile` |
 | huggingface_hub (model download CLI) | `1.27.0` | `setup.sh` |
