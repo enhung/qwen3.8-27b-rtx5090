@@ -14,7 +14,11 @@
 # Access it locally or via SSH tunnel.
 
 global:
-  scrape_interval: 15s
+  # 5 s scrape for fine-grained GPU telemetry. With the 365 d retention
+  # (docker-compose.yml), that's ~17k samples/day/series, so the
+  # prometheus_data volume grows by several GB per year — keep it on a
+  # disk with room to spare.
+  scrape_interval: 5s
   evaluation_interval: 30s
 
 scrape_configs:

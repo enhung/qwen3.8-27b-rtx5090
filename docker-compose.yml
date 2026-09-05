@@ -131,7 +131,7 @@ services:
   # Scrapes vllm:8000/metrics and dcgm-exporter:9400 (see
   # prometheus/prometheus.yml).
   # UI bound to 127.0.0.1:9090 — no public exposure, access locally or via
-  # SSH tunnel. 30 days of data kept in the prometheus_data volume.
+  # SSH tunnel. 1 year of data kept in the prometheus_data volume.
   prometheus:
     image: prom/prometheus:v3.13.2
     container_name: prometheus
@@ -139,7 +139,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
-      - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.time=365d
       - --web.enable-lifecycle
     ports:
       - "127.0.0.1:9090:9090"
