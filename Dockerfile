@@ -42,7 +42,9 @@ ENV PATH="/app/unsloth-nvfp4-env/bin:$PATH"
 # Install the pinned package set (full lock), then clean the uv cache
 # (saves disk space!). --torch-backend=auto resolves the +cu132 torch wheels.
 COPY requirements.lock /tmp/requirements.lock
-RUN uv pip install -r /tmp/requirements.lock --torch-backend=auto && \
+RUN uv pip install -r /tmp/requirements.lock \
+      --index https://download.pytorch.org/whl/cu132 \
+      --default-index https://pypi.org/simple && \
     uv cache clean && \
     rm -f /tmp/requirements.lock
 
