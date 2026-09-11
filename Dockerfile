@@ -39,9 +39,14 @@ RUN uv python install 3.13.15 && \
 ENV VIRTUAL_ENV="/app/unsloth-nvfp4-env"
 ENV PATH="/app/unsloth-nvfp4-env/bin:$PATH"
 
-# Install the pinned package set using the CUDA 13.2 PyTorch backend.
+# Restore the frozen production Python environment without re-resolving dependencies.
 COPY requirements.lock /tmp/requirements.lock
-RUN uv pip install -r /tmp/requirements.lock --torch-backend=cu132 && \
+RUN uv pip install -r /tmp/requirements.lock \
+      --no-deps \
+      --index https://download.pytorch.org/whl/cu132 \
+      --index https://download.pytorch.org/whl/cpu \
+      --default-index https://pypi.org/simple \
+      --index-strategy unsafe-best-match && \
     uv cache clean && \
     rm -f /tmp/requirements.lock
 
