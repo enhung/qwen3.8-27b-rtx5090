@@ -50,4 +50,9 @@ RUN uv pip install -r /tmp/requirements.lock \
     uv cache clean && \
     rm -f /tmp/requirements.lock
 
-ENTRYPOINT ["vllm", "serve"]
+# GPUtw runs this image directly (without the upstream docker-compose bind mount).
+# Download the pinned model snapshot into the instance workspace, then serve it locally.
+COPY entrypoint-gputw.sh /app/entrypoint-gputw.sh
+RUN chmod +x /app/entrypoint-gputw.sh
+
+ENTRYPOINT ["/app/entrypoint-gputw.sh"]
