@@ -39,12 +39,9 @@ RUN uv python install 3.13.15 && \
 ENV VIRTUAL_ENV="/app/unsloth-nvfp4-env"
 ENV PATH="/app/unsloth-nvfp4-env/bin:$PATH"
 
-# Install the pinned package set (full lock), then clean the uv cache
-# (saves disk space!). --torch-backend=auto resolves the +cu132 torch wheels.
+# Install the pinned package set using the CUDA 13.2 PyTorch backend.
 COPY requirements.lock /tmp/requirements.lock
-RUN uv pip install -r /tmp/requirements.lock \
-      --index https://download.pytorch.org/whl/cu132 \
-      --default-index https://pypi.org/simple && \
+RUN uv pip install -r /tmp/requirements.lock --torch-backend=cu132 && \
     uv cache clean && \
     rm -f /tmp/requirements.lock
 
