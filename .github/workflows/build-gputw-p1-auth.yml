@@ -1,0 +1,50 @@
+name: Build GPUtw P1 auth image
+
+# workflow_dispatch requires the workflow file on the default branch.
+# The feature branch push trigger lets us build P1 without merging into main.
+on:
+  push:
+    branches:
+      - codex/gputw-agent-p1-auth
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: gputw-p1-auth-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'enhung/qwen3.8-27b-rtx5090'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      IMAGE: ghcr.io/enhung/qwen38-rtx5090:p1-auth-${{ github.sha }}-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Run P1 local tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Build isolated image
+        run: docker build --platform linux/amd64 -f Dockerfile.gputw-auth -t "$IMAGE" .
+
+      - name: Check middleware import and entrypoint
+        run: |
+          docker run --rm --entrypoint python "$IMAGE" -c 'import gputw_auth_middleware; print("middleware import OK")'
+          docker image inspect "$IMAGE" --format '{{json .Config.Entrypoint}}' |
+            python3 -c 'import json,sys; assert json.load(sys.stdin) == ["/app/entrypoint-auth.sh"]'
+
+      - name: Login to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+      - name: Push P1 image and show immutable digest
+        run: |
+          docker push "$IMAGE"
+          docker buildx imagetools inspect "$IMAGE"

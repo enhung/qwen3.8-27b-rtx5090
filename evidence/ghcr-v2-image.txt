@@ -1,0 +1,8 @@
+2026-09-12 public GHCR OCI registry query (anonymous)
+repository: ghcr.io/enhung/qwen38-rtx5090
+tag: v2
+manifest Docker-Content-Digest: sha256:6f2f5c227aea70f48cd53c650626640723d6a93cca4b2bdf6865058c71cb0298
+linux/amd64 image config Entrypoint: ["/app/entrypoint-gputw.sh"]
+linux/amd64 image config WorkingDir: /app
+linux/amd64 image config Cmd: null
+No image build or container execution was performed here.

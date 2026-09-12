@@ -1,0 +1,29 @@
+UTC 2026-09-12T21:15:07.037355+00:00
+repo HEAD 207222ca131da2b488bcc1b9490edd1fb5e43777
+GPUTW_API_KEY absent (value never read or logged)
+Docker unavailable
+GitHub CLI token unavailable (value never read or logged)
+
+[unit tests] exit=0
+test_approved_hermes_and_health_routes_require_key (test_gputw_auth.AuthMiddlewareTests.test_approved_hermes_and_health_routes_require_key) ... ok
+test_duplicate_auth_headers_are_rejected (test_gputw_auth.AuthMiddlewareTests.test_duplicate_auth_headers_are_rejected) ... ok
+test_missing_key_fails_closed (test_gputw_auth.AuthMiddlewareTests.test_missing_key_fails_closed) ... ok
+test_unprotected_vllm_routes_are_not_exposed (test_gputw_auth.AuthMiddlewareTests.test_unprotected_vllm_routes_are_not_exposed) ... ok
+test_missing_or_multiline_key_file_prevents_start (test_gputw_auth.EntrypointTests.test_missing_or_multiline_key_file_prevents_start) ... ok
+test_key_file_must_have_one_line (test_gputw_auth.LiveVerifierInputTests.test_key_file_must_have_one_line) ... ok
+test_origin_must_be_exact_https_host_without_path (test_gputw_auth.LiveVerifierInputTests.test_origin_must_be_exact_https_host_without_path) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.096s
+
+OK
+
+[entrypoint syntax] exit=0
+
+[baseline syntax] exit=0
+
+[python syntax] exit=0
+
+[workflow YAML parse] exit=0
+
+[whitespace] PASS; problem_count=0

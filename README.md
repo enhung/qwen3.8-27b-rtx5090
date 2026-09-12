@@ -7,6 +7,15 @@ on a single RTX 5090 (32 GB) through [vLLM](https://github.com/vllm-project/vllm
 The API is OpenAI-compatible and includes a 256K-token context,
 reasoning, and auto tool choice.
 
+> **GPUtw / Hermes Agent deployment:** The existing GPUtw Light baseline is a
+> separate 131072-context, 4-sequence profile. It does not use the generic
+> Docker Compose defaults described below. See [CURRENT_STATE.md](CURRENT_STATE.md),
+> [AGENT_DEPLOYMENT_EVALUATION.md](AGENT_DEPLOYMENT_EVALUATION.md),
+> [gputw/SAFE_BASELINE.sh](gputw/SAFE_BASELINE.sh), and [SECURITY.md](SECURITY.md).
+> The isolated P1 auth image in `Dockerfile.gputw-auth` is a local candidate;
+> it has not yet passed live GPUtw or Hermes acceptance. The build and live
+> gate sequence is in [P1_DEPLOYMENT_RUNBOOK.md](P1_DEPLOYMENT_RUNBOOK.md).
+
 It ships two serve modes: the base **light** setup (no MTP, 16 concurrent
 sequences, shared-host defaults) and an **MTP speculative-decoding**
 override tuned for a dedicated card. At `0.965` GPU-memory utilization the
@@ -548,6 +557,13 @@ stack, regenerate the lock from a working container:
 
 ```
 Dockerfile                          vLLM + flashinfer + CUTLASS DSL image (NVFP4)
+Dockerfile.gputw-auth               P1-only GPUtw auth layer on v2 rollback image
+.github/workflows/build-gputw-p1-auth.yml  branch-only P1 GHCR build
+gputw/                             frozen GPUtw Light invocation and auth middleware
+gputw/verify_auth.py               external P1 auth matrix (no key or response-body logging)
+CURRENT_STATE.md                    GPUtw handoff facts versus current verification
+SECURITY.md                         P1 public API security design and live gates
+ON_DEMAND_ARCHITECTURE.md           Agent lease / safe shutdown design (P4)
 requirements.lock                   frozen Python stack of the known-good container (196 packages)
 docker-compose.yml                  service definition (ports, volumes, serve flags; light mode)
 docker-compose.mtp.yml              MTP override file (ideal-usage tuning: 3 seqs / 0.965, dedicated card)
