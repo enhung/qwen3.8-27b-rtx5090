@@ -561,6 +561,7 @@ Dockerfile.gputw-auth               P1-only GPUtw auth layer on v2 rollback imag
 .github/workflows/build-gputw-p1-auth.yml  branch-only P1 GHCR build
 gputw/                             frozen GPUtw Light invocation and auth middleware
 gputw/verify_auth.py               external P1 auth matrix (no key or response-body logging)
+PRODUCTION_VALIDATION_CHECKLIST.md external valid-key / Hermes production gate sequence
 CURRENT_STATE.md                    GPUtw handoff facts versus current verification
 SECURITY.md                         P1 public API security design and live gates
 ON_DEMAND_ARCHITECTURE.md           Agent lease / safe shutdown design (P4)
