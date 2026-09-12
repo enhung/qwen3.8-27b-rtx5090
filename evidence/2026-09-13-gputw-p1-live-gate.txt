@@ -1,0 +1,9 @@
+GPUtw P1 live gate evidence (UTC)
+
+P1 image: ghcr.io/enhung/qwen38-rtx5090:p1-auth-31a67e3732b70d05c7c1b758129585d0320b6539-34719491022@sha256:e8b34e248f7a97758df88dd50d312bbb321c3b5daecd0f3982187c812312c7a0
+
+Attempt 1: instance e39079b7-ce9d-477d-a2bd-8f0400d59c21 on 117 GB RTX 5090 node 72ca950b-53b3-4a19-b19e-92b6ffcdc8fc. Created 2026-09-12T21:45:23Z at US$0.6731/hour. Status reached FAILED after STARTING; no failureReason, events, or pod logs remained. runs endpoint returned zero records.
+
+Attempt 2: instance ca0b2de4-8e50-4dac-a30b-348f62a1a15c on the same node, created 2026-09-12T22:04:05Z with explicit Light flags plus --enforce-eager to diagnose graph-capture timeout. It reached STARTING and logs showed safetensors loading with no OOM, missing-file, permission, or traceback signals. At 2026-09-12T22:17Z active list still showed DEPLOYING. Stop requests then encountered intermittent Cloudflare/API no-response; final stopped state was not confirmed in this evidence file.
+
+Result: no authenticated external endpoint, Hermes tool loop, long-context, or performance result was recorded. Production remains NO-GO. Do not create another instance until GPUtw confirms the second instance is STOPPED/FAILED and explains the STARTING timeout/readiness behavior.
