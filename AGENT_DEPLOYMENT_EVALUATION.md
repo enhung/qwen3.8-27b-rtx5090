@@ -26,4 +26,4 @@
 4. **P4：on-demand。** 固定 Gateway、single-flight 建立、authenticated readiness、Agent/tool continuation lease、20–30 分鐘安全 idle、最大 RUNNING/費用保護、stop 失敗恢復與 endpoint 重新發現。若冷啟動仍約 15 分鐘，產品需提供「工作排隊/準備中」體驗或預熱時窗，不應承諾即時回覆。
 5. **P5–P9：工作品質優先。** 先通過 Hermes 代表性案例，再診斷 thinking；MTP、`max-num-seqs` 與 KV 實驗各自獨立，對照 Light 的完成時間、成功率與成本。
 
-**當前狀態：**P1 已在 GPUtw 117 GB RTX 5090 `RUNNING` 驗證：容器 localhost auth matrix 10/10、chat completion 200、tool-choice 與完整 tool loop 成功，8K/32K context 與雙併發 sanity 通過，公開端點未授權路徑符合 401/404。持續中的 instance `c2b173c7…` 另完成 cache 路徑盤點與重複 8K prompt（首 byte 1.034 s → 0.162 s）觀察。外部 valid-key 與 Hermes 實際 continuation 尚待受信 client 驗證，因此 production 仍 **NO-GO**。完整證據見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。
+**當前狀態：**P1 已在 GPUtw 117 GB RTX 5090 `RUNNING` 驗證：容器 localhost auth matrix 10/10、chat completion 200、tool-choice 與完整 tool loop 成功，8K/32K context 與雙併發 sanity 通過，公開端點未授權路徑符合 401/404。instance `c2b173c7…` 另完成 cache 路徑盤點與重複 8K prompt（首 byte 1.034 s → 0.162 s）觀察，現已停止。外部 valid-key 與 Hermes 實際 continuation 尚待受信 client 驗證，因此 production 仍 **NO-GO**。完整證據見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。

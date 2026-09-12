@@ -9,6 +9,7 @@
 - Image：`ghcr.io/enhung/qwen38-rtx5090:p1-auth-31a67e3732b70d05c7c1b758129585d0320b6539-34719491022@sha256:e8b34e248f7a97758df88dd50d312bbb321c3b5daecd0f3982187c812312c7a0`
 - HTTPS endpoint：`https://8000-c2b173c7-b356-45fd-babb-bf606b017bf0.gputw.ai`
 - Model：`qwen3.8-27b`
+- 下次部署：沿用上述 image digest 與 `/vault`，設定 `customImage.sshEnabled: true`；SSH 使用 `pod-<new-instance-id>@ssh.gputw.ai -p 2222`。
 
 ## Gate 順序
 
@@ -32,4 +33,3 @@
 ## 目前已知阻塞
 
 Container-local auth、chat、tool loop、8K/32K context、雙併發與 warm/cache 已通過。GPUtw Web UI HTTPS proxy 即使在 `public` port 模式仍回 platform-level 401，因此尚未證明 bearer key 能從外部穿透到 middleware；暫時 raw TCP exposure 測試後已刪除。Production gate 必須由真正可通過該平台層的受信 client 完成，不能以 localhost 結果替代。
-

@@ -2,7 +2,7 @@
 
 ## 結論
 
-**P0 基線文件化與 P1 auth image 已完成；production NO-GO。** P1 已在 GPUtw live instance 完成容器 auth、chat、tool-choice、完整 tool loop、8K/32K context 與雙併發 sanity；同一個持續中的 instance 也完成 cache 路徑盤點與重複 prompt warm/cache 觀察。尚未完成受信外部 client 的 valid-key path、Hermes 實際 continuation 與正式 throughput/long-context benchmark。這是刻意分開 P1 與後續 host / lifecycle 變數。
+**P0 基線文件化與 P1 auth image 已完成；production NO-GO。** P1 已在 GPUtw live instance 完成容器 auth、chat、tool-choice、完整 tool loop、8K/32K context 與雙併發 sanity；同一個 instance 也完成 cache 路徑盤點與重複 prompt warm/cache 觀察，之後已停止。尚未完成受信外部 client 的 valid-key path、Hermes 實際 continuation 與正式 throughput/long-context benchmark。這是刻意分開 P1 與後續 host / lifecycle 變數。
 
 ## 本次已做
 

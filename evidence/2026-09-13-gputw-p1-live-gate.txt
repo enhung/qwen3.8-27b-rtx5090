@@ -27,6 +27,10 @@ Production validation preparation (new key file, same endpoint):
 - `gputw/verify_auth.py` ran all 10 cases against `https://8000-c2b173c7-b356-45fd-babb-bf606b017bf0.gputw.ai`; every request returned platform-level HTTP 403, including no-key, wrong-key, and valid-key cases. The script exited non-zero. This confirms the external client is blocked before the container middleware and cannot serve as a valid-key production gate from this network path.
 - Using the same scoped GPUtw key through `instances:exec`, the container-local authenticated `/health` check returned HTTP 200. The persistent service is therefore healthy; the remaining blocker is the GPUtw external proxy/session path, not vLLM readiness or the P1 middleware.
 
+Shutdown (user requested):
+- Instance `c2b173c7-b356-45fd-babb-bf606b017bf0` stop API returned `status=STOPPED`; a follow-up status query returned `STOPPED`, `ready=false`, and `restartCount=0`.
+- The stopped instance currently records `byoSshEnabled=false`. Next deployment must set `customImage.sshEnabled=true`; SSH access is therefore planned for the next deployment rather than retrofitted onto this stopped custom-image instance.
+
 Continuation run (instance d4600e1e-e846-453b-93ca-c4b73c94b9e3, 2026-09-12 UTC):
 - Cold start reached RUNNING/ready after approximately 16 minutes on the same 117 GB RTX 5090 node.
 - Complete local Agent loop passed: tool call HTTP 200 (0.416 s), tool result continuation HTTP 200 (0.278 s), final content present (15 completion tokens).
