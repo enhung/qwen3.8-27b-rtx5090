@@ -7,7 +7,7 @@
 | 方案 | 優點 | 主要風險 | 決策 |
 |---|---|---|---|
 | 直接保留公開 v2 | 零遷移、既有效能 | vLLM 未保護的推論路徑可能外露 | 不接受作 production Internet endpoint |
-| P1 安全版 + 117 GB 已成功 host、先持續運行 | 單一變數，可驗證 Hermes 回歸與長 context | RUNNING 持續計費；P1 尚未 live 測 | **第一階段推薦** |
+| P1 安全版 + 117 GB 已成功 host、先持續運行 | 單一變數，可驗證 Hermes 回歸與長 context | RUNNING 持續計費；外部 valid-key path 尚待 Hermes/受信 client 驗證 | **第一階段推薦** |
 | P1 + 53 GB 便宜 host | 可能降低時費率 | JIT/graph 啟動 RAM 峰值未通過；失敗重試增加成本 | 待 P3 真 cold start 資格通過 |
 | P1 + Gateway on-demand | 降低閒置 GPU 時數 | 首次工作等待、instance/endpoint 變動、錯誤停機 | 待 P2 ready 時間與 P4 lease 機制驗證 |
 | MTP / thinking 預設開啟 | 可能改善特定請求 | correctness、tool calling、記憶體與完成時間未驗證 | 只做隔離實驗，Light 保持 fallback |
@@ -26,4 +26,4 @@
 4. **P4：on-demand。** 固定 Gateway、single-flight 建立、authenticated readiness、Agent/tool continuation lease、20–30 分鐘安全 idle、最大 RUNNING/費用保護、stop 失敗恢復與 endpoint 重新發現。若冷啟動仍約 15 分鐘，產品需提供「工作排隊/準備中」體驗或預熱時窗，不應承諾即時回覆。
 5. **P5–P9：工作品質優先。** 先通過 Hermes 代表性案例，再診斷 thinking；MTP、`max-num-seqs` 與 KV 實驗各自獨立，對照 Light 的完成時間、成功率與成本。
 
-**當前狀態：**P1 image 已由 GitHub Actions 建置並發佈；沒有 live GPUtw / Hermes 證據，因此 production **NO-GO**。完整變更與缺口見 [CODEX_IMPLEMENTATION_REPORT.md](CODEX_IMPLEMENTATION_REPORT.md)。
+**當前狀態：**P1 已在 GPUtw 117 GB RTX 5090 `RUNNING` 驗證：容器 localhost auth matrix 10/10、chat completion 200、tool-choice 成功，公開端點未授權路徑符合 401/404。instance 已停止；外部 valid-key 與完整 Hermes continuation 尚待受信 client 驗證，因此 production 仍 **NO-GO**。完整證據見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。

@@ -6,7 +6,7 @@
 - repo 的 `entrypoint-gputw.sh` 將模型下載固定在 revision `0cc27958cefbbe231782ec8511de8c4eb5233348`，再從本地目錄啟動。現有檢查只看 `config.json`，**不是**對整個 snapshot 的完整性證明。
 - repo 的通用 `docker-compose.yml` 預設 262144 context、16 seq、`MAX_JOBS=4`，**不是** handoff 中 GPUtw 實測的 Light profile；GPUtw 應使用 `gputw/SAFE_BASELINE.sh` 中的 131072 / 4 seq / 2 jobs 設定。
 - vLLM 0.28.0 官方說明確認 `VLLM_API_KEY` 只保護部分路徑，`/invocations` 等路徑不受其保護。[來源](https://docs.vllm.ai/en/v0.28.0/usage/security/)
-- 本執行環境沒有 `GPUTW_API_KEY`、Docker 或 RTX 5090；因此尚無任何本次 live GPUtw / Hermes 驗收結果。
+- P1 live instance 已完成 localhost auth、chat 與 tool-choice smoke；公開 endpoint 未授權路徑亦已探測。完整外部 valid-key / Hermes continuation 尚待受信 client。
 
 ## Handoff 記錄，尚未由本次重新測量
 
@@ -17,4 +17,4 @@
 
 ## 當前判斷
 
-P1 auth image 已由 GitHub Actions run `34719491022` 建置並發佈，digest 見 `evidence/2026-09-12-actions-build.txt`；**尚未在 GPUtw 部署或驗證外部端點**。Go/no-go 仍是 **NO-GO for production**，直到 `SECURITY.md` 的 live gate 完成。下一個工程變數只應是 P1 auth；cache、機型與 lifecycle 暫不混入。
+P1 auth image 已由 GitHub Actions run `34719491022` 建置並發佈，digest 見 `evidence/2026-09-12-actions-build.txt`；已在 GPUtw 117 GB RTX 5090 完成容器 auth、chat、tool-choice 與公開未授權路徑驗證，instance 已停止。Go/no-go 仍是 **NO-GO for production**，直到受信外部 client 的 valid-key 與完整 Hermes continuation gate 完成。下一個工程變數只應是 P1 auth；cache、機型與 lifecycle 暫不混入。
