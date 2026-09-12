@@ -1,0 +1,15 @@
+GitHub Actions P1 build evidence (2026-09-12 UTC)
+Repository: enhung/qwen3.8-27b-rtx5090
+Branch: codex/gputw-agent-p1-auth
+Commit: 31a67e3732b70d05c7c1b758129585d0320b6539
+Workflow: .github/workflows/build-gputw-p1-auth.yml
+Run: https://github.com/enhung/qwen3.8-27b-rtx5090/actions/runs/34719491022
+Job: 103622586211
+Conclusion: success (3m9s)
+Checks: 7/7 unittest pass; Docker build; middleware import; entrypoint inspect; GHCR login and push.
+Image tag: ghcr.io/enhung/qwen38-rtx5090:p1-auth-31a67e3732b70d05c7c1b758129585d0320b6539-34719491022
+Manifest media type: application/vnd.docker.distribution.manifest.v2+json
+Manifest digest: sha256:e8b34e248f7a97758df88dd50d312bbb321c3b5daecd0f3982187c812312c7a0
+Anonymous GHCR manifest pull: HTTP 200, same Docker-Content-Digest (checked 2026-09-12 UTC).
+Base v2 digest: sha256:6f2f5c227aea70f48cd53c650626640723d6a93cca4b2bdf6865058c71cb0298
+No GPUtw runtime or Hermes result is implied by this build.

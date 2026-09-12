@@ -8,5 +8,6 @@
 | API ready | 約 14m48s | Handoff 記錄；需同條件 cold/warm 實驗 |
 | Thinking ON 700-token sample | 約 7.9 tok/s，無 final content | Handoff 單次觀察，不能推論普遍慢 10× |
 | P1 middleware / entrypoint / verifier 本地測試 | 7/7 pass | 本地驗證，非 GPUtw live 驗收 |
+| P1 image GitHub Actions build / GHCR push | pass；digest `sha256:e8b34e248f7a97758df88dd50d312bbb321c3b5daecd0f3982187c812312c7a0` | Image build 證據，非 GPUtw live 驗收 |
 
-下一輪評估以 **Agent 工作完成時間、成功率與每個完成工作成本** 為主要結果；TTFT、decode、tool-call 合法率、131K 長文與 CUDA/Xid 是診斷/驗收指標。原始本地驗證見 `evidence/2026-09-12-local-validation.txt`；live raw evidence 尚未產生。
+下一輪評估以 **Agent 工作完成時間、成功率與每個完成工作成本** 為主要結果；TTFT、decode、tool-call 合法率、131K 長文與 CUDA/Xid 是診斷/驗收指標。原始本地驗證見 `evidence/2026-09-12-local-validation.txt`，image build 證據見 `evidence/2026-09-12-actions-build.txt`；live raw evidence 尚未產生。

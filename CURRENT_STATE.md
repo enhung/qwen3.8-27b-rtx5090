@@ -17,4 +17,4 @@
 
 ## 當前判斷
 
-P1 候選實作已寫入工作樹，但**尚未 build、部署或驗證外部端點**。Go/no-go 仍是 **NO-GO for production**，直到 `SECURITY.md` 的 live gate 完成。下一個工程變數只應是 P1 auth；cache、機型與 lifecycle 暫不混入。
+P1 auth image 已由 GitHub Actions run `34719491022` 建置並發佈，digest 見 `evidence/2026-09-12-actions-build.txt`；**尚未在 GPUtw 部署或驗證外部端點**。Go/no-go 仍是 **NO-GO for production**，直到 `SECURITY.md` 的 live gate 完成。下一個工程變數只應是 P1 auth；cache、機型與 lifecycle 暫不混入。

@@ -26,4 +26,4 @@
 4. **P4：on-demand。** 固定 Gateway、single-flight 建立、authenticated readiness、Agent/tool continuation lease、20–30 分鐘安全 idle、最大 RUNNING/費用保護、stop 失敗恢復與 endpoint 重新發現。若冷啟動仍約 15 分鐘，產品需提供「工作排隊/準備中」體驗或預熱時窗，不應承諾即時回覆。
 5. **P5–P9：工作品質優先。** 先通過 Hermes 代表性案例，再診斷 thinking；MTP、`max-num-seqs` 與 KV 實驗各自獨立，對照 Light 的完成時間、成功率與成本。
 
-**當前狀態：**只有 P1 本地候選與文件；沒有 live GPUtw / Hermes 證據，因此 production **NO-GO**。完整變更與阻礙見 [CODEX_IMPLEMENTATION_REPORT.md](CODEX_IMPLEMENTATION_REPORT.md)。
+**當前狀態：**P1 image 已由 GitHub Actions 建置並發佈；沒有 live GPUtw / Hermes 證據，因此 production **NO-GO**。完整變更與缺口見 [CODEX_IMPLEMENTATION_REPORT.md](CODEX_IMPLEMENTATION_REPORT.md)。
