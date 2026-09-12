@@ -12,5 +12,8 @@
 | P1 GPUtw live localhost auth matrix | 10/10 pass | 117 GB RTX 5090；Vault key 僅在容器內使用 |
 | P1 chat completion / Agent tool-choice | chat 200；`get_weather` tool call 成功 | 容器 localhost smoke；非完整 Hermes continuation |
 | P1 public unauthenticated routes | `/health`、`/v1/models` 401；`/invocations`、`/metrics`、`/docs` 404 | 外部 GPUtw endpoint；valid-key 外部 path 待受信 client |
+| Agent tool loop | tool call 200 → tool result continuation 200 → final answer；15 completion tokens | GPUtw live container-local run |
+| Context sanity | 8K: 8,208 prompt tokens / 0.673 s；32K: 32,784 / 2.925 s；均 200 | GPUtw live container-local run |
+| Parallel sanity | 2 concurrent requests，均 200；wall 0.930 s | GPUtw live container-local run |
 
 下一輪評估以 **Agent 工作完成時間、成功率與每個完成工作成本** 為主要結果；TTFT、decode、tool-call 合法率、131K 長文與 CUDA/Xid 是診斷/驗收指標。原始本地驗證見 `evidence/2026-09-12-local-validation.txt`，image build 證據見 `evidence/2026-09-12-actions-build.txt`，GPUtw live gate 見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。

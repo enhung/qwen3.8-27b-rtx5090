@@ -9,3 +9,10 @@ Attempt 2: instance ca0b2de4-8e50-4dac-a30b-348f62a1a15c on the same node, creat
 Follow-up after user reported service ready (2026-09-12 UTC): the same second instance reached RUNNING/ready. Resources reported US$0.6731/hour and zero extra port fee; one billing run started 2026-09-12T22:18:18Z. The container-local auth matrix passed 10/10 using the Vault key without returning it to the client. GET /health and GET /v1/models required the key; valid requests returned 200; POST /invocations, GET /metrics and GET /docs returned 404 with or without the key. A minimal chat completion returned HTTP 200 for model qwen3.8-27b. A tool-choice smoke produced one get_weather tool call with finish_reason tool_calls. External unauthenticated probes to the public GPUtw endpoint returned /health 401, /v1/models 401, /invocations 404, /metrics 404 and /docs 404. Requests from inside the container to the public proxy returned 403 due to the proxy owner/session layer, so external valid-key behavior still needs a separate trusted client (for example Hermes).
 
 The test instance was stopped after these checks; active list returned zero. No long-context, throughput, or complete Hermes continuation was run. Production remains NO-GO until the trusted external valid-key and Hermes gates pass.
+
+Continuation run (instance d4600e1e-e846-453b-93ca-c4b73c94b9e3, 2026-09-12 UTC):
+- Cold start reached RUNNING/ready after approximately 16 minutes on the same 117 GB RTX 5090 node.
+- Complete local Agent loop passed: tool call HTTP 200 (0.416 s), tool result continuation HTTP 200 (0.278 s), final content present (15 completion tokens).
+- Context sanity passed: target 8,192 -> 8,208 prompt tokens, HTTP 200, 0.673 s; target 32,768 -> 32,784 prompt tokens, HTTP 200, 2.925 s.
+- Two-request parallel sanity passed: both HTTP 200, wall 0.930 s; prompt tokens 6,160 each.
+- Instance stopped after tests; active list returned zero. These are container-local Agent/context/parallel checks; full Hermes external continuation and production load test remain pending.

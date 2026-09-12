@@ -2,7 +2,7 @@
 
 ## 結論
 
-**P0 基線文件化與 P1 auth image 已完成；production NO-GO。** P1 已在 GPUtw live instance 完成容器 auth、chat 與 tool-choice 驗證，但尚未完成受信外部 client 的 valid-key path 與完整 Hermes continuation。這是刻意分開 P1 與後續 cache / host / lifecycle 變數。
+**P0 基線文件化與 P1 auth image 已完成；production NO-GO。** P1 已在 GPUtw live instance 完成容器 auth、chat、tool-choice、完整 tool loop、8K/32K context 與雙併發 sanity；尚未完成受信外部 client 的 valid-key path、Hermes 實際 continuation 與正式 throughput/long-context benchmark。這是刻意分開 P1 與後續 cache / host / lifecycle 變數。
 
 ## 本次已做
 
@@ -17,7 +17,7 @@
 
 `python3 -m unittest discover -s tests -v`：7/7 pass。`bash -n`、`py_compile`、whitespace check：pass。完整輸出見 `evidence/2026-09-12-local-validation.txt`。公開 GHCR manifest / config 查詢確認 v2 image 的 ENTRYPOINT 為 `/app/entrypoint-gputw.sh`、工作目錄為 `/app`，見 `evidence/ghcr-v2-image.txt`。
 
-已從公開 GHCR 查得 v2 manifest digest 並固定在 P1 Dockerfile。GitHub Actions run `34719491022` 的 7 個測試、Docker build、容器內 middleware import / entrypoint 檢查及 GHCR push 全部成功；P1 image 為 `ghcr.io/enhung/qwen38-rtx5090:p1-auth-31a67e3732b70d05c7c1b758129585d0320b6539-34719491022@sha256:e8b34e248f7a97758df88dd50d312bbb321c3b5daecd0f3982187c812312c7a0`，證據見 `evidence/2026-09-12-actions-build.txt`。GPUtw live P1 驗證結果與成本見 `evidence/2026-09-13-gputw-p1-live-gate.txt`：localhost auth 10/10、chat 200、tool-choice 成功，公開未授權路徑 401/404；驗收後 instance 已停止。尚缺：受信外部 client 的 valid-key path、Hermes 完整 tool loop continuation、long context 與性能基準。安全路徑 allowlist 只根據 handoff 的 Chat Completions 行為；若 Hermes 走 `/v1/responses` 等路徑，必須用真實 trace 證明後再增加。
+已從公開 GHCR 查得 v2 manifest digest 並固定在 P1 Dockerfile。GitHub Actions run `34719491022` 的 7 個測試、Docker build、容器內 middleware import / entrypoint 檢查及 GHCR push 全部成功；P1 image 為 `ghcr.io/enhung/qwen38-rtx5090:p1-auth-31a67e3732b70d05c7c1b758129585d0320b6539-34719491022@sha256:e8b34e248f7a97758df88dd50d312bbb321c3b5daecd0f3982187c812312c7a0`，證據見 `evidence/2026-09-12-actions-build.txt`。GPUtw live P1 驗證結果與成本見 `evidence/2026-09-13-gputw-p1-live-gate.txt`：localhost auth 10/10、chat 200、tool-choice 與完整 tool loop 成功，8K/32K context 與雙併發 sanity 通過，公開未授權路徑 401/404；驗收後 instance 已停止。尚缺：受信外部 client 的 valid-key path、Hermes 實際 continuation、正式 long-context/throughput benchmark。安全路徑 allowlist 只根據 handoff 的 Chat Completions 行為；若 Hermes 走 `/v1/responses` 等路徑，必須用真實 trace 證明後再增加。
 
 ## 下一個可執行關卡
 
