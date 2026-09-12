@@ -23,6 +23,10 @@ P2 cache/readiness observation (same persistent c2b173c7 instance):
 - Repeating the exact 73,728-character (~8K-token) streaming prompt twice on localhost produced HTTP 200 both times. First request first-byte/total latency was 1.034/1.112 s; second request was 0.162/0.240 s. This is a warm/prefix-cache signal, not a cold-start measurement; cold start remains approximately 16 minutes from the earlier live runs.
 - The existing Web UI port 8000 was explicitly set to GPUtw `public` mode (no extra port fee), but the public hostname still returned platform-level HTTP 401 even with the container bearer key; this request therefore did not reach the middleware. A temporary raw TCP exposure (assigned `tcp.gputw.ai:20017`) was created to isolate that layer, could not be reached from the external client, and was deleted immediately. No raw exposure remains.
 
+Production validation preparation (new key file, same endpoint):
+- `gputw/verify_auth.py` ran all 10 cases against `https://8000-c2b173c7-b356-45fd-babb-bf606b017bf0.gputw.ai`; every request returned platform-level HTTP 403, including no-key, wrong-key, and valid-key cases. The script exited non-zero. This confirms the external client is blocked before the container middleware and cannot serve as a valid-key production gate from this network path.
+- Using the same scoped GPUtw key through `instances:exec`, the container-local authenticated `/health` check returned HTTP 200. The persistent service is therefore healthy; the remaining blocker is the GPUtw external proxy/session path, not vLLM readiness or the P1 middleware.
+
 Continuation run (instance d4600e1e-e846-453b-93ca-c4b73c94b9e3, 2026-09-12 UTC):
 - Cold start reached RUNNING/ready after approximately 16 minutes on the same 117 GB RTX 5090 node.
 - Complete local Agent loop passed: tool call HTTP 200 (0.416 s), tool result continuation HTTP 200 (0.278 s), final content present (15 completion tokens).
