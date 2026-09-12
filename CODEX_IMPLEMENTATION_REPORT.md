@@ -2,7 +2,7 @@
 
 ## 結論
 
-**P0 基線文件化與 P1 auth image 已完成；production NO-GO。** P1 已在 GPUtw live instance 完成容器 auth、chat、tool-choice、完整 tool loop、8K/32K context 與雙併發 sanity；尚未完成受信外部 client 的 valid-key path、Hermes 實際 continuation 與正式 throughput/long-context benchmark。這是刻意分開 P1 與後續 cache / host / lifecycle 變數。
+**P0 基線文件化與 P1 auth image 已完成；production NO-GO。** P1 已在 GPUtw live instance 完成容器 auth、chat、tool-choice、完整 tool loop、8K/32K context 與雙併發 sanity；同一個持續中的 instance 也完成 cache 路徑盤點與重複 prompt warm/cache 觀察。尚未完成受信外部 client 的 valid-key path、Hermes 實際 continuation 與正式 throughput/long-context benchmark。這是刻意分開 P1 與後續 host / lifecycle 變數。
 
 ## 本次已做
 
@@ -23,4 +23,4 @@
 
 1. 依 `P1_DEPLOYMENT_RUNBOOK.md`，用已固定 digest 的 P1 image 在原 117 GB host / 同一 pinned model、同一 Light flags 啟動隔離 instance；確認 `/vault` key file 存在但不讀出內容到 log。
 2. 從受信外部 client 執行 `SECURITY.md` 的 valid-key auth matrix 與 `HERMES_SETUP.md` 的完整 tool loop；只有全通過才切 Hermes endpoint。
-3. 然後才進入 P2 cache 路徑發現與 cold/warm 測試，再做 53 GB host 資格與 P4 on-demand。每階段保留 raw evidence 與 v2 rollback。
+3. P2 cache 路徑發現與 warm 測試已在同一個 persistent instance 完成；下一步是受信外部 client/Hermes gate，再做 53 GB host 資格與 P4 on-demand。每階段保留 raw evidence 與 v2 rollback。

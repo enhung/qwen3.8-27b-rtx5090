@@ -15,5 +15,7 @@
 | Agent tool loop | tool call 200 → tool result continuation 200 → final answer；15 completion tokens | GPUtw live container-local run |
 | Context sanity | 8K: 8,208 prompt tokens / 0.673 s；32K: 32,784 / 2.925 s；均 200 | GPUtw live container-local run |
 | Parallel sanity | 2 concurrent requests，均 200；wall 0.930 s | GPUtw live container-local run |
+| Persistent instance readiness | `RUNNING` / `ready=true` / restart 0；117 GB RAM、8 GB shm；vRAM 90.3% | GPUtw resource snapshot；instance `c2b173c7…` |
+| Warm/prefix-cache signal | 同一約 8K prompt：首 byte 1.034 s → 0.162 s；total 1.112 s → 0.240 s | 同一 persistent container localhost streaming run；非 cold start |
 
 下一輪評估以 **Agent 工作完成時間、成功率與每個完成工作成本** 為主要結果；TTFT、decode、tool-call 合法率、131K 長文與 CUDA/Xid 是診斷/驗收指標。原始本地驗證見 `evidence/2026-09-12-local-validation.txt`，image build 證據見 `evidence/2026-09-12-actions-build.txt`，GPUtw live gate 見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。
