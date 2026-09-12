@@ -13,7 +13,7 @@ reasoning, and auto tool choice.
 > [AGENT_DEPLOYMENT_EVALUATION.md](AGENT_DEPLOYMENT_EVALUATION.md),
 > [gputw/SAFE_BASELINE.sh](gputw/SAFE_BASELINE.sh), and [SECURITY.md](SECURITY.md).
 > The isolated P1 auth image in `Dockerfile.gputw-auth` has been built and
-> published by GitHub Actions; it has not yet passed live GPUtw or Hermes acceptance. The build and live
+> published by GitHub Actions; container-local GPUtw checks pass, while external GPUtw proxy and Hermes acceptance remain pending. The build and live
 > gate sequence is in [P1_DEPLOYMENT_RUNBOOK.md](P1_DEPLOYMENT_RUNBOOK.md).
 
 It ships two serve modes: the base **light** setup (no MTP, 16 concurrent
