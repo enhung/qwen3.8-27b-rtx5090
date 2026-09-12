@@ -21,6 +21,7 @@ P2 cache/readiness observation (same persistent c2b173c7 instance):
 - GPUtw status remained RUNNING/Running/ready=true with restartCount=0. Resource snapshot reported 1x RTX 5090 32GB, 117 GB RAM, 24 vCPU, 8 GB shm, 584 GB disk; vRAM 29,603 MiB (90.3%) at the sample time and hourly compute rate US$0.6731.
 - Container cache discovery found `/root/.cache/flashinfer` (27 MB), `/root/.cache/vllm` (103 MB, including the model-info cache), `/tmp/root/cutlass_python_cache` (4 KB), and `/tmp/torchinductor_root` (4 KB). The model mount's `.cache` was only 20 KB. No API-key values were emitted.
 - Repeating the exact 73,728-character (~8K-token) streaming prompt twice on localhost produced HTTP 200 both times. First request first-byte/total latency was 1.034/1.112 s; second request was 0.162/0.240 s. This is a warm/prefix-cache signal, not a cold-start measurement; cold start remains approximately 16 minutes from the earlier live runs.
+- The existing Web UI port 8000 was explicitly set to GPUtw `public` mode (no extra port fee), but the public hostname still returned platform-level HTTP 401 even with the container bearer key; this request therefore did not reach the middleware. A temporary raw TCP exposure (assigned `tcp.gputw.ai:20017`) was created to isolate that layer, could not be reached from the external client, and was deleted immediately. No raw exposure remains.
 
 Continuation run (instance d4600e1e-e846-453b-93ca-c4b73c94b9e3, 2026-09-12 UTC):
 - Cold start reached RUNNING/ready after approximately 16 minutes on the same 117 GB RTX 5090 node.
