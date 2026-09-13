@@ -22,5 +22,9 @@
 | P3 Agent/tool loop | tool call 200 / 0.816 s；continuation 200 / 0.843 s；final 產生 | GPUtw SSH-local run |
 | P3 long context | 43,741 / 5.414 s；80,050 / 8.672 s；126,718 / 16.005 s；均 200 | GPUtw SSH-local run；126K probe with 8-token headroom |
 | P3 external proxy | 10/10 cases 均 platform-level 403 | GPUtw HTTPS endpoint；仍不可作 Production gate |
+| P3 Light 32K C1/C2/C4/C8 | output 48/62/77/79 tok/s；TTFT p50 2.32/3.60/6.07/12.38 s | 3 timed batches each；C8 is client concurrency with server max-num-seqs=4 |
+| P3 Light 64K C1/C2/C4 | output 27/32/35 tok/s；TTFT p50 6.23/9.36/15.64 s | 3 timed batches each；KV-pool-safe combinations |
+| P3 Light 32K C16 | output 80 tok/s；TTFT p50 25.09 s；E2E p95 51.36 s | 2 timed batches；queueing/overload observation, server max-num-seqs=4 |
+| P3 Light 64K C16 | output 36 tok/s；TTFT p50 57.48 s；E2E p95 112.67 s | 2 timed batches；queueing/overload observation, server max-num-seqs=4 |
 
 下一輪評估以 **Agent 工作完成時間、成功率與每個完成工作成本** 為主要結果；TTFT、decode、tool-call 合法率、131K 長文與 CUDA/Xid 是診斷/驗收指標。原始本地驗證見 `evidence/2026-09-12-local-validation.txt`，image build 證據見 `evidence/2026-09-12-actions-build.txt`，GPUtw live gate 見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。

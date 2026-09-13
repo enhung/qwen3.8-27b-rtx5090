@@ -279,6 +279,19 @@ and run counts are env-configurable — `BENCH_LEVELS`, `BENCH_CONTEXTS`,
 `BENCH_RUNS`; `--quick` for a fast sanity check; raw runs land in
 `benchmarks/results/`).
 
+#### P3 Light concurrency check (53 GB host)
+
+The 2026-09-13 P3 run used the SSH-enabled Light profile (`max-num-seqs=4`,
+three timed batches per safe combination). At 32K, aggregate output was 48,
+62, 77, and 79 tok/s at client C1/C2/C4/C8, with TTFT p50 of 2.32, 3.60,
+6.07, and 12.38 s. At 64K, C1/C2/C4 produced 27, 32, and 35 tok/s, with
+TTFT p50 of 6.23, 9.36, and 15.64 s. C16 was measured separately as a
+queueing stress case: 80 tok/s at 32K (TTFT p50 25.09 s, E2E p95 51.36 s)
+and 36 tok/s at 64K (TTFT p50 57.48 s, E2E p95 112.67 s). C8/C16 therefore
+describe client-side queueing under `max-num-seqs=4`, not 8/16 simultaneous
+engine sequences. Raw JSON is in `benchmarks/results/` and the live evidence
+file.
+
 ## Requirements
 
 | | |

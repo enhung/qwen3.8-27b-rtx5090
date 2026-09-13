@@ -47,6 +47,11 @@ P3 53 GB host run (instance 2e86b442-359c-4075-9853-c7ee534c6b77, created 2026-0
 - External 10-case auth matrix against `https://8000-2e86b442-359c-4075-9853-c7ee534c6b77.gputw.ai` returned platform-level HTTP 403 for every case, so the P3 host itself passes container/SSH gates but not the external proxy gate.
 - After the user set Web UI port 8000 to public, GPUtw API readback confirmed `allowedPorts=[8000]`, `portAccess.8000.mode=public`, `hasPassword=false`, and `extraPortFee=0`. A fresh external 10-case matrix still returned platform-level HTTP 403 for every case (including valid and missing keys), so the public flag is recorded but requests remain blocked at the GPUtw proxy/session layer before the container middleware.
 
+P3 Light concurrency benchmark (same instance, server `max-num-seqs=4`, 2026-09-13 UTC):
+- 32K, C1/C2/C4/C8 (3 timed batches each): output throughput 48/62/77/79 tok/s; TTFT p50 2.32/3.60/6.07/12.38 s. C8 increased aggregate throughput only marginally over C4 while adding queueing latency.
+- 64K, C1/C2/C4 (3 timed batches each): output throughput 27/32/35 tok/s; TTFT p50 6.23/9.36/15.64 s. C8/C16 were excluded from the KV-pool-safe matrix.
+- C16 stress (2 timed batches each, deliberately overriding the benchmark pool guard): 32K output 80 tok/s, TTFT p50 25.09 s, E2E p95 51.36 s; 64K output 36 tok/s, TTFT p50 57.48 s, E2E p95 112.67 s. These are client-concurrency/queueing results under `max-num-seqs=4`, not engine scaling at 16 simultaneous sequences. Raw JSON: `benchmarks/results/2026-09-13_14-04-26_parallel.json`, `2026-09-13_14-08-11_parallel.json`, `2026-09-13_14-14-21_parallel.json`.
+
 Continuation run (instance d4600e1e-e846-453b-93ca-c4b73c94b9e3, 2026-09-12 UTC):
 - Cold start reached RUNNING/ready after approximately 16 minutes on the same 117 GB RTX 5090 node.
 - Complete local Agent loop passed: tool call HTTP 200 (0.416 s), tool result continuation HTTP 200 (0.278 s), final content present (15 completion tokens).
