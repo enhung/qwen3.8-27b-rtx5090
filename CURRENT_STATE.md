@@ -17,4 +17,4 @@
 
 ## 當前判斷
 
-P1 auth image 已由 GitHub Actions run `34719491022` 建置並發佈，digest 見 `evidence/2026-09-12-actions-build.txt`；已在 GPUtw 117 GB RTX 5090 完成容器 auth、chat、tool-choice、公開未授權路徑、8K/32K context 與雙併發驗證。instance `c2b173c7…` 另完成 cache 路徑盤點與重複 prompt warm/cache 觀察，現已依使用者要求停止。Go/no-go 仍是 **NO-GO for production**，直到受信外部 client 的 valid-key 與完整 Hermes continuation gate 完成；下次部署需明確啟用 SSH。
+P1 auth image 已由 GitHub Actions run `34719491022` 建置並發佈，digest 見 `evidence/2026-09-12-actions-build.txt`；已在 GPUtw 117 GB RTX 5090 完成容器 auth、chat、tool-choice、公開未授權路徑、8K/32K context 與雙併發驗證。instance `c2b173c7…` 完成 cache 路徑盤點，`16bbe34e…` 完成 SSH-enabled cold-start（超過 17 分鐘）與 container health 驗證，兩者現已停止。Go/no-go 仍是 **NO-GO for production**，直到受信外部 client 的 valid-key 與完整 Hermes continuation gate 完成；下次需先配置帳戶 SSH public key 並釐清 GPUtw proxy 403。

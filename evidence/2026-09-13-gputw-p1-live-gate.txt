@@ -31,6 +31,11 @@ Shutdown (user requested):
 - Instance `c2b173c7-b356-45fd-babb-bf606b017bf0` stop API returned `status=STOPPED`; a follow-up status query returned `STOPPED`, `ready=false`, and `restartCount=0`.
 - The stopped instance currently records `byoSshEnabled=false`. Next deployment must set `customImage.sshEnabled=true`; SSH access is therefore planned for the next deployment rather than retrofitted onto this stopped custom-image instance.
 
+SSH-enabled production validation run (instance 16bbe34e-7c13-4e5c-af40-d0d3f3f9bde2, created 2026-09-13T12:20:26Z):
+- Created from the same pinned P1 image on the same 117 GB RTX 5090 node with `byoSshEnabled=true` and Web UI port 8000. It reached `RUNNING/ready=true` at uptime 946 s and remained ready at 1,043 s (over the 17-minute budget), with no restart or failure reason.
+- SSH connection to `pod-16bbe34e-7c13-4e5c-af40-d0d3f3f9bde2@ssh.gputw.ai:2222` was rejected with `Permission denied (publickey)`. The service flag is enabled, but an account SSH public key still needs to be added in GPUtw Dashboard → SSH Keys.
+- Container-local authenticated `/health` through `instances:exec` returned HTTP 200. The external 10-case auth matrix against the new endpoint returned platform-level HTTP 403 for every case, so external valid-key/Hermes acceptance remains blocked before middleware.
+
 Continuation run (instance d4600e1e-e846-453b-93ca-c4b73c94b9e3, 2026-09-12 UTC):
 - Cold start reached RUNNING/ready after approximately 16 minutes on the same 117 GB RTX 5090 node.
 - Complete local Agent loop passed: tool call HTTP 200 (0.416 s), tool result continuation HTTP 200 (0.278 s), final content present (15 completion tokens).
