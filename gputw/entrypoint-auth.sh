@@ -6,12 +6,6 @@ export MODEL_DIR="${MODEL_DIR:-/vault/qwen38/models/qwen3.8-27b-nvfp4}"
 export MAX_JOBS="${MAX_JOBS:-2}"
 export NVCC_THREADS="${NVCC_THREADS:-2}"
 
-# A fresh GPUtw custom image with no supplied args still uses the frozen
-# Light invocation. Existing v2-style args pass through unchanged.
-if [[ $# -eq 0 ]]; then
-  exec /app/SAFE_BASELINE.sh
-fi
-
 API_KEY_FILE="${API_KEY_FILE:-/vault/qwen38/config/api_key}"
 if [[ ! -f "$API_KEY_FILE" || ! -r "$API_KEY_FILE" ]]; then
   echo "API key file is missing or unreadable" >&2
@@ -27,6 +21,12 @@ if [[ -z "$VLLM_API_KEY" || "$VLLM_API_KEY" =~ [[:space:]] ]] || \
 fi
 export VLLM_API_KEY
 unset API_KEY_FILE
+
+# A fresh GPUtw custom image with no supplied args uses the profile supervisor.
+# Existing v2-style args pass through unchanged for one-shot compatibility.
+if [[ $# -eq 0 ]]; then
+  exec /app/profile-supervisor.sh
+fi
 
 # vLLM's built-in key only protects selected prefixes. The middleware also
 # blocks unauthenticated and non-allowlisted routes on the public listener.

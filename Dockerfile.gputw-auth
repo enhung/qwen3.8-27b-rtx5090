@@ -5,7 +5,10 @@ LABEL org.opencontainers.image.source="https://github.com/enhung/qwen3.8-27b-rtx
 COPY gputw/auth_middleware.py /app/gputw_auth_middleware.py
 COPY gputw/entrypoint-auth.sh /app/entrypoint-auth.sh
 COPY gputw/SAFE_BASELINE.sh /app/SAFE_BASELINE.sh
-RUN chmod 0755 /app/entrypoint-auth.sh /app/SAFE_BASELINE.sh
+COPY gputw/profile-supervisor.sh /app/profile-supervisor.sh
+COPY gputw/switch-profile.sh /app/switch-profile.sh
+RUN chmod 0755 /app/entrypoint-auth.sh /app/SAFE_BASELINE.sh \
+    /app/profile-supervisor.sh /app/switch-profile.sh
 ENV PYTHONPATH=/app
 
 ENTRYPOINT ["/app/entrypoint-auth.sh"]

@@ -27,7 +27,7 @@ docker buildx imagetools inspect "$P1_IMAGE"
 先讀取 GPUtw 當下可用的 1× RTX 5090 host、RAM 與實際時費率，並設定這次測試的**最大 RUNNING 時間 / 預算**。建立新 instance，不覆蓋現有 v2；可能有短暫雙重計費。
 
 - Image：上述 P1 digest；不在 GPUtw env 注入 API key。預設 entrypoint 會從 `/vault/qwen38/config/api_key` 載入。
-- `MODEL_DIR=/vault/qwen38/models/qwen3.8-27b-nvfp4`、`MAX_JOBS=2`、`NVCC_THREADS=2`。新 image 未提供 args 時自動使用 `SAFE_BASELINE.sh` 的 131072 / 4 seq Light 設定；若沿用 v2 的 args，逐一與該檔核對。
+- `MODEL_DIR=/vault/qwen38/models/qwen3.8-27b-nvfp4`、`MAX_JOBS=2`、`NVCC_THREADS=2`。新 image 未提供 args 時自動使用 profile supervisor 的 `light`（131072 / 4 seq）設定；SSH 可用 `/app/switch-profile.sh light16` 或 `mtp16` 在同一 instance 重啟 vLLM 子程序，若沿用 v2 的 args 則 supervisor 不會介入，需逐一核對 argv。
 - 只開 HTTP 8000；確認 GPUtw 的 port access 模式與 HTTPS endpoint。部署前不啟用額外 raw TCP/UDP exposure。
 - 記錄 instance ID、image digest、node/SKU、起始時間、上限時間與 endpoint；不記錄 key。
 

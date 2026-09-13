@@ -121,6 +121,19 @@ two keys are set in `.env`, remove them too (otherwise the `.env` values
 keep applying to the base file; with both unset, the base defaults
 `16` / `0.95` kick in).
 
+### Switching profiles on one GPUtw instance
+
+The GPUtw auth image can run a small profile supervisor as PID 1. This keeps
+the instance alive while vLLM is restarted as a child process, so profile
+changes do not require a new instance. From SSH, run
+`/app/switch-profile.sh light16` for the Light `max-num-seqs=16` experiment or
+`/app/switch-profile.sh mtp16` for MTP-2 with the same sequence cap; use
+`/app/switch-profile.sh light` to return to the conservative baseline. The
+selected profile is stored under `/vault/qwen38/config/profile`, and the
+service is ready again only after authenticated `GET /health` returns 200.
+The first switch still pays vLLM startup/JIT time, but subsequent switches
+reuse the same GPUtw instance and its persistent model/cache state.
+
 ### MTP (dedicated card)
 
 MTP mode wants the card reserved for it: at `0.965` utilization nearly

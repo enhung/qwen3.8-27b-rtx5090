@@ -7,9 +7,13 @@ Handoff 記錄 port 8000 曾公開，當時無服務層 key。vLLM 0.28.0 官方
 ## P1 候選實作
 
 - `Dockerfile.gputw-auth` 以已工作 v2 為 base；不更動其模型、vLLM 或 CUDA。正式 build 請使用獨立、不可覆蓋 v2 的 tag，並記錄新舊 image digest。
-- `gputw/entrypoint-auth.sh` 預設 `/vault` model 路徑與 2 個編譯 jobs；未提供 GPUtw args 時使用 `SAFE_BASELINE.sh` 的完整 Light 旗標。它必須能讀 `/vault/qwen38/config/api_key` 的單行非空 token，否則容器啟動失敗；只將 token 放進 process environment，不印到 log 或 argv。`/vault/qwen38/config` 權限應限制為推論程序可讀、其他使用者不可讀。
+- `gputw/entrypoint-auth.sh` 預設 `/vault` model 路徑與 2 個編譯 jobs；未提供 GPUtw args 時交由 `profile-supervisor.sh` 啟動 Light/MTP profile。它必須能讀 `/vault/qwen38/config/api_key` 的單行非空 token，否則容器啟動失敗；只將 token 放進 process environment，不印到 log 或 argv。`/vault/qwen38/config` 權限應限制為推論程序可讀、其他使用者不可讀。
 - `gputw/auth_middleware.py` 對 GET `/health`、GET `/v1/models`、POST `/v1/chat/completions` 要求單一有效 Bearer header；其他 HTTP 路徑 404，WebSocket 關閉。vLLM 自身的 key 驗證保留作第二層。
 - TLS 仍由 GPUtw HTTPS endpoint 承擔；正式環境應只曝光必要 HTTP port。此實作不代替供應商網路隔離與限流。
+
+### 同一 instance 的 profile 切換
+
+無 args 啟動的 image 以 supervisor 作為 PID 1，vLLM 是其子程序。SSH 進入 instance 後可執行 `/app/switch-profile.sh light16` 或 `/app/switch-profile.sh mtp16`；腳本會把選擇寫入 `/vault/qwen38/config/profile` 並送 HUP，讓 supervisor 優雅停止舊 engine、重新啟動新 profile。`light` 是保守 fallback。切換期間 health 會暫時不可用，只有 authenticated health 回 200 才算 ready；若 profile 無效，supervisor 會回到 Light。
 
 ## Live hard gate（目前未執行）
 
