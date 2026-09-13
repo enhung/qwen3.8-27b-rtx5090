@@ -26,7 +26,7 @@ Values are aggregate output throughput in tokens/second, median over the three t
 
 Keep the current instance on `mtp16` with `max-num-seqs=16`. MTP improves 32K aggregate throughput by about 8–29% over the Light profile and has a smaller 64K benefit. Thinking-on reduces decode throughput by roughly 3–8% versus MTP thinking-off in this workload, while leaving TTFT nearly unchanged; it should therefore be selected per request based on answer quality, rather than by rebuilding the image or instance.
 
-The service was healthy after the run: profile `mtp16`, authenticated `/health` HTTP 200, and authenticated `/v1/models` HTTP 200. The public GPUtw proxy authentication path and a real Hermes continuation remain separate production gates.
+The service was healthy after the run: profile `mtp16`, authenticated `/health` HTTP 200, and authenticated `/v1/models` HTTP 200. The public GPUtw proxy authentication path and Hermes continuation have since been accepted; Hermes Thinking-on is also confirmed usable. Thinking off remains the lower-latency default.
 
 ## Evidence on GPUtw
 

@@ -34,4 +34,4 @@
 
 ## 驗收結論與後續注意事項
 
-Container-local auth、chat、tool loop、8K/32K context、雙併發、warm/cache、外部 GPUtw proxy authenticated path，以及 Hermes 的 streaming chat、tool loop 與續接均已通過。Production profile 為 `mtp16`，Hermes 預設 `Thinking off`。Thinking on 的 Qwen reasoning stream parser 相容性仍是後續改善項目；在修正前不作為預設模式。
+Container-local auth、chat、tool loop、8K/32K context、雙併發、warm/cache、外部 GPUtw proxy authenticated path，以及 Hermes 的 streaming chat、tool loop、續接與 Thinking-on 均已通過。Production profile 為 `mtp16`，Hermes 預設 `Thinking off` 以降低延遲；Thinking on 可按 request 開啟。先前的重複輸出未能確定單一根因，目前記錄為已恢復的暫時性 client/provider stream 異常。
