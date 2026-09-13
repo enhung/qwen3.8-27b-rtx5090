@@ -7,6 +7,10 @@ COPY gputw/entrypoint-auth.sh /app/entrypoint-auth.sh
 COPY gputw/SAFE_BASELINE.sh /app/SAFE_BASELINE.sh
 COPY gputw/profile-supervisor.sh /app/profile-supervisor.sh
 COPY gputw/switch-profile.sh /app/switch-profile.sh
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
 RUN chmod 0755 /app/entrypoint-auth.sh /app/SAFE_BASELINE.sh \
     /app/profile-supervisor.sh /app/switch-profile.sh
 ENV PYTHONPATH=/app

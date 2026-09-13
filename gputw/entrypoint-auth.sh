@@ -22,6 +22,14 @@ fi
 export VLLM_API_KEY
 unset API_KEY_FILE
 
+# GPUtw's SSH gateway expects sshd to be present before it wires the route.
+# Starting it here avoids the platform bootstrap apt path, which can fail on
+# the Vault-backed apt lists mount with an Invalid cross-device link error.
+if command -v sshd >/dev/null 2>&1; then
+  mkdir -p /run/sshd
+  /usr/sbin/sshd
+fi
+
 # A fresh GPUtw custom image with no supplied args uses the profile supervisor.
 # Existing v2-style args pass through unchanged for one-shot compatibility.
 if [[ $# -eq 0 ]]; then
