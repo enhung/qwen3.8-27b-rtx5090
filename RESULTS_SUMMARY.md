@@ -17,5 +17,10 @@
 | Parallel sanity | 2 concurrent requests，均 200；wall 0.930 s | GPUtw live container-local run |
 | Persistent instance readiness | `RUNNING` / `ready=true` / restart 0；117 GB RAM、8 GB shm；vRAM 90.3% | GPUtw resource snapshot；instance `c2b173c7…` |
 | Warm/prefix-cache signal | 同一約 8K prompt：首 byte 1.034 s → 0.162 s；total 1.112 s → 0.240 s | 同一 persistent container localhost streaming run；非 cold start |
+| P3 53 GB cold start | `RUNNING/ready` at 859 s；持續至 1,623 s 無 restart/failure；US$0.5606/h | GPUtw live run，SSH-enabled |
+| P3 SSH + container auth | SSH 成功；auth matrix 10/10；health/models 200；禁止路徑 401/404 | GPUtw SSH-local run |
+| P3 Agent/tool loop | tool call 200 / 0.816 s；continuation 200 / 0.843 s；final 產生 | GPUtw SSH-local run |
+| P3 long context | 43,741 / 5.414 s；80,050 / 8.672 s；126,718 / 16.005 s；均 200 | GPUtw SSH-local run；126K probe with 8-token headroom |
+| P3 external proxy | 10/10 cases 均 platform-level 403 | GPUtw HTTPS endpoint；仍不可作 Production gate |
 
 下一輪評估以 **Agent 工作完成時間、成功率與每個完成工作成本** 為主要結果；TTFT、decode、tool-call 合法率、131K 長文與 CUDA/Xid 是診斷/驗收指標。原始本地驗證見 `evidence/2026-09-12-local-validation.txt`，image build 證據見 `evidence/2026-09-12-actions-build.txt`，GPUtw live gate 見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。

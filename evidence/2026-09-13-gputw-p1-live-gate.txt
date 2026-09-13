@@ -36,6 +36,17 @@ SSH-enabled production validation run (instance 16bbe34e-7c13-4e5c-af40-d0d3f3f9
 - SSH connection to `pod-16bbe34e-7c13-4e5c-af40-d0d3f3f9bde2@ssh.gputw.ai:2222` was rejected with `Permission denied (publickey)`. The service flag is enabled, but an account SSH public key still needs to be added in GPUtw Dashboard → SSH Keys.
 - Container-local authenticated `/health` through `instances:exec` returned HTTP 200. The external 10-case auth matrix against the new endpoint returned platform-level HTTP 403 for every case, so external valid-key/Hermes acceptance remains blocked before middleware.
 
+P3 53 GB host run (instance 2e86b442-359c-4075-9853-c7ee534c6b77, created 2026-09-13T13:14:49Z):
+- Same pinned P1 image with `byoSshEnabled=true` on RTX 5090 32GB / 53 GB RAM / 24 vCPU / 577 GB disk at US$0.5606/hour (no extra port fee). It reached `RUNNING/ready=true` at uptime 859 s and remained ready at uptime 1,623 s; restartCount stayed 0 and failureReason stayed null.
+- SSH login succeeded and the SSH command returned `SSH_OK HEALTH_200`. The client printed a non-fatal `client_global_hostkeys_prove_confirm` RSA signature warning; the command and health check completed successfully.
+- SSH-local auth matrix passed 10/10: valid `/health` and `/v1/models` returned 200, missing/wrong credentials returned 401, and `/invocations`, `/metrics`, `/docs` returned 404.
+- Agent tool loop passed: `get_weather` tool call HTTP 200 (0.816 s), tool-result continuation HTTP 200 (0.843 s), final content present (128 chars, 64 completion tokens).
+- Context sanity passed: 8,192-character probe -> 6,196 prompt tokens / 0.593 s; 32,768-character probe -> 24,628 prompt tokens / 2.161 s; both HTTP 200. Long-context probes also passed: 276,697-character prompt -> 43,741 prompt tokens / 5.414 s; 506,654-character prompt -> 80,050 prompt tokens / 8.672 s; both HTTP 200.
+- A near-limit probe also passed: 802,218-character prompt -> 126,718 prompt tokens / 16.005 s with `max_tokens=8`, HTTP 200. After the request the instance remained `RUNNING/ready=true`, restartCount 0; resource sample was 42.6% RAM and 90.4% VRAM.
+- Parallel sanity passed: two concurrent requests both HTTP 200, wall 0.667 s, 6,196 prompt tokens each. Resource snapshot after tests showed RAM 42.6% and VRAM 90.3%.
+- External 10-case auth matrix against `https://8000-2e86b442-359c-4075-9853-c7ee534c6b77.gputw.ai` returned platform-level HTTP 403 for every case, so the P3 host itself passes container/SSH gates but not the external proxy gate.
+- After the user set Web UI port 8000 to public, GPUtw API readback confirmed `allowedPorts=[8000]`, `portAccess.8000.mode=public`, `hasPassword=false`, and `extraPortFee=0`. A fresh external 10-case matrix still returned platform-level HTTP 403 for every case (including valid and missing keys), so the public flag is recorded but requests remain blocked at the GPUtw proxy/session layer before the container middleware.
+
 Continuation run (instance d4600e1e-e846-453b-93ca-c4b73c94b9e3, 2026-09-12 UTC):
 - Cold start reached RUNNING/ready after approximately 16 minutes on the same 117 GB RTX 5090 node.
 - Complete local Agent loop passed: tool call HTTP 200 (0.416 s), tool result continuation HTTP 200 (0.278 s), final content present (15 completion tokens).
