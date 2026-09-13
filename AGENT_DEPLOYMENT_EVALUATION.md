@@ -26,4 +26,4 @@
 4. **P4：on-demand。** 固定 Gateway、single-flight 建立、authenticated readiness、Agent/tool continuation lease、20–30 分鐘安全 idle、最大 RUNNING/費用保護、stop 失敗恢復與 endpoint 重新發現。若冷啟動仍約 15 分鐘，產品需提供「工作排隊/準備中」體驗或預熱時窗，不應承諾即時回覆。
 5. **P5–P9：工作品質優先。** 先通過 Hermes 代表性案例，再診斷 thinking；MTP、`max-num-seqs` 與 KV 實驗各自獨立，對照 Light 的完成時間、成功率與成本。
 
-**當前狀態：**P1 已在 GPUtw 117 GB RTX 5090 完成 container 驗證；P3 53 GB RTX 5090 也通過至少 17 分鐘 cold start、SSH、10/10 container auth、Agent tool loop、80K/126K prompt 與雙併發。8000 port 的 API 設定目前顯示為 `public`，但外部 GPUtw proxy 的 10-case auth 仍全部回 platform-level 403；131K 完整設定驗證、Hermes 受信外部 continuation 與正式負載尚待完成，因此 production 仍 **NO-GO**。完整證據見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。
+**當前狀態：**P1 已在 GPUtw 117 GB RTX 5090 完成 container 驗證；P3 53 GB RTX 5090 也通過至少 17 分鐘 cold start、SSH、10/10 container auth、Agent tool loop、80K/126K prompt、雙併發與正式並發 benchmark。8000 port 為 `public`，外部 GPUtw proxy 的 10-case authenticated path 已由 Mac client 全數通過；131K 完整設定驗證、Hermes 受信外部 continuation 與正式負載尚待完成，因此 production 仍 **NO-GO**。完整證據見 `evidence/2026-09-13-gputw-p1-live-gate.txt`。
