@@ -1,14 +1,14 @@
 # Qwen3.8-27B 在 Agent 應用的部署評估
 
-**建議：先維持已工作的 GPUtw Light profile，完成 P1 外部 API 驗證後供 Hermes 使用；暫不把 on-demand 當成同步即時請求的預設路徑。** 原因是 handoff 記錄的冷啟動約 14m48s，對互動式 Agent 是可感知的長等待；另一方面現有單流約 82–86 tok/s 已足夠，下一步應優化完成一項真實工作所需的總時間與成本，而不是追求最高 decode 數字。
+**建議：優先使用已驗證的 GPUtw 53 GB / NT$17.94/hr 等價低成本 Light host，完成 P1 外部 API 驗證後供 Hermes 使用；117 GB host 作為無可用低成本 SKU 或穩定性不足時的 fallback，暫不把 on-demand 當成同步即時請求的預設路徑。** 原因是 handoff 記錄的冷啟動約 14m48s，對互動式 Agent 是可感知的長等待；另一方面現有單流約 82–86 tok/s 已足夠，下一步應優化完成一項真實工作所需的總時間與成本，而不是追求最高 decode 數字。
 
 ## 方案比較
 
 | 方案 | 優點 | 主要風險 | 決策 |
 |---|---|---|---|
 | 直接保留公開 v2 | 零遷移、既有效能 | vLLM 未保護的推論路徑可能外露 | 不接受作 production Internet endpoint |
-| P1 安全版 + 117 GB 已成功 host、先持續運行 | 單一變數，可驗證 Hermes 回歸與長 context | RUNNING 持續計費；外部 valid-key path 尚待 Hermes/受信 client 驗證 | **第一階段推薦** |
-| P1 + 53 GB 便宜 host | 可能降低時費率 | 長 context VRAM headroom 與外部 proxy 仍需注意 | P3 cold start、SSH、80K/126K context 與 Agent loop 已通過；正式負載仍待 |
+| P1 + 53 GB 便宜 host、先持續運行 | 目前成本最低且已通過主要 container gates | 長 context VRAM headroom 與外部 proxy 仍需注意 | **第一階段推薦**；若無可用 SKU 才回 117 GB |
+| P1 安全版 + 117 GB 已成功 host | RAM headroom 較大、可作 fallback | 時費率較高；外部 valid-key path 尚待 Hermes/受信 client 驗證 | 低成本 host 不可用或穩定性不足時使用 |
 | P1 + Gateway on-demand | 降低閒置 GPU 時數 | 首次工作等待、instance/endpoint 變動、錯誤停機 | P2 已量到 warm/cache；P4 lease 機制仍待驗證 |
 | MTP / thinking 預設開啟 | 可能改善特定請求 | correctness、tool calling、記憶體與完成時間未驗證 | 只做隔離實驗，Light 保持 fallback |
 

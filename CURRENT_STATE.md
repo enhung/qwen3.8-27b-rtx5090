@@ -17,4 +17,4 @@
 
 ## 當前判斷
 
-P1 auth image 已由 GitHub Actions run `34719491022` 建置並發佈，digest 見 `evidence/2026-09-12-actions-build.txt`；117 GB baseline 與 53 GB P3 host 都已完成 container auth、chat、tool-choice、context、雙併發與 SSH 驗證，53 GB host 另通過約 17 分鐘 cold start、80K 與 126K prompt。現行 P3 instance `2e86b442…` 仍在執行以完成後續驗證；GPUtw API 目前回報 8000 port 為 `public`、無額外 port fee。Go/no-go 仍是 **NO-GO for production**，直到受信外部 client 的 valid-key 與完整 Hermes continuation gate 完成；外部 proxy 目前仍回 403。
+P1 auth image 已由 GitHub Actions run `34719491022` 建置並發佈，digest 見 `evidence/2026-09-12-actions-build.txt`；117 GB baseline 與 53 GB P3 host 都已完成 container auth、chat、tool-choice、context、雙併發與 SSH 驗證，53 GB host 另通過約 17 分鐘 cold start、80K/126K prompt 與 32K/64K C1–C16 並發矩陣。現行 P3 instance `2e86b442…` 仍在執行以完成後續驗證，費率約 NT$17.94/hr；GPUtw API 回報 8000 port 為 `public`、無額外 port fee。Go/no-go 仍是 **NO-GO for production**，直到受信外部 client 的 valid-key 與完整 Hermes continuation gate 完成；外部 proxy 目前仍回 403。
