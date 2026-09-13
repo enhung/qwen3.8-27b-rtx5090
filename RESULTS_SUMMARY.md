@@ -21,7 +21,7 @@
 | P3 SSH + container auth | SSH 成功；auth matrix 10/10；health/models 200；禁止路徑 401/404 | GPUtw SSH-local run |
 | P3 Agent/tool loop | tool call 200 / 0.816 s；continuation 200 / 0.843 s；final 產生 | GPUtw SSH-local run |
 | P3 long context | 43,741 / 5.414 s；80,050 / 8.672 s；126,718 / 16.005 s；均 200 | GPUtw SSH-local run；126K probe with 8-token headroom |
-| P3 external proxy | 10/10 cases 均 platform-level 403 | GPUtw HTTPS endpoint；仍不可作 Production gate |
+| P3 external proxy auth | 10/10 pass；unauthenticated 401、valid key 200、禁止路徑 404 | 使用外部 Mac client 執行修正版 `gputw/verify_auth.py`；GPUtw HTTPS endpoint |
 | P3 Light 32K C1/C2/C4/C8 | output 48/62/77/79 tok/s；TTFT p50 2.32/3.60/6.07/12.38 s | 3 timed batches each；C8 is client concurrency with server max-num-seqs=4 |
 | P3 Light 64K C1/C2/C4/C8 | output 27/32/35/36 tok/s；TTFT p50 6.23/9.36/15.64/29.45 s | C1-C4 3 timed batches；C8 2 timed batches，queueing stress |
 | P3 Light 32K C16 | output 80 tok/s；TTFT p50 25.09 s；E2E p95 51.36 s | 2 timed batches；queueing/overload observation, server max-num-seqs=4 |

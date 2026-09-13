@@ -34,4 +34,4 @@
 
 ## 目前已知阻塞
 
-Container-local auth、chat、tool loop、8K/32K context、雙併發與 warm/cache 已通過。GPUtw Web UI HTTPS proxy 即使在 `public` port 模式仍回 platform-level 401，因此尚未證明 bearer key 能從外部穿透到 middleware；暫時 raw TCP exposure 測試後已刪除。Production gate 必須由真正可通過該平台層的受信 client 完成，不能以 localhost 結果替代。
+Container-local auth、chat、tool loop、8K/32K context、雙併發、warm/cache 與外部 GPUtw proxy authenticated path 已通過。外部 Mac client 的 10-case verifier 結果為全數 pass：unauthenticated routes 回 401、valid key 的 `/health` 與 `/v1/models` 回 200、禁止路徑回 404。剩餘 Production gate 是使用同一 endpoint 完成 Hermes 真實 streaming chat、`tool call → tool result → final answer`、以及重連後的最小 continuation；在此完成前仍維持 NO-GO。
