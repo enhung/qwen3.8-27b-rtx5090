@@ -12,7 +12,7 @@
 
 - GPUtw：1× RTX 5090 32 GB，成功 host 24 CPU / 約 117 GB RAM；`/vault` 保留，`/workspace` 不保留，RUNNING 時計費。
 - 已工作的 image：`ghcr.io/enhung/qwen38-rtx5090:v2`；模型是 `gittensor-model-hub/Qwen3.8-27B-NVFP4-RTX5090` 的上述 revision，本地 `/vault/qwen38/models/qwen3.8-27b-nvfp4`。
-- Light：vLLM 0.28.0、ModelOpt NVFP4、FP8 KV、FlashInfer Blackwell FP4、131072 context、MTP 關閉、單流約 82–86 tok/s，API ready 約 14m48s；Hermes 已成功連線。
+- Light：vLLM 0.28.0、ModelOpt NVFP4、FP8 KV、FlashInfer Blackwell FP4、131072 context、MTP 關閉、單流約 82–86 tok/s；歷次 cold start 約 15–16 分鐘，下一輪以至少 17 分鐘作為 readiness 預算；Hermes 已成功連線的 handoff 記錄仍待本次 external gate 重做。
 - P1 缺口：port 8000 曾公開，且當時 vLLM 無服務層金鑰。
 
 ## 當前判斷

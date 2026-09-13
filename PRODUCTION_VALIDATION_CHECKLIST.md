@@ -10,6 +10,7 @@
 - HTTPS endpoint：`https://8000-c2b173c7-b356-45fd-babb-bf606b017bf0.gputw.ai`
 - Model：`qwen3.8-27b`
 - 下次部署：沿用上述 image digest 與 `/vault`，設定 `customImage.sshEnabled: true`；SSH 使用 `pod-<new-instance-id>@ssh.gputw.ai -p 2222`。
+- Cold-start 預算：至少 17 分鐘；`STARTING` / JIT 編譯期間不提前判定失敗，只有 authenticated `GET /health` 回 200 才算 ready。
 
 ## Gate 順序
 
