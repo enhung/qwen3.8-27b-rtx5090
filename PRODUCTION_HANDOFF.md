@@ -30,6 +30,7 @@ During the switch, wait for authenticated `GET /health` to return 200 before sen
 
 - External auth matrix: 10/10 pass (`401` unauthenticated, `200` valid key, `404` blocked routes)
 - MTP/Thinking benchmark: [benchmark report](artifacts/gputw_benchmark_report_2026-09-13.md)
+- Post-acceptance smoke: 6/6 local requests returned HTTP 200 (Thinking off/on, three each)
 - Production decision: GO with the profile and defaults above
 
 ## Operations and rollback
