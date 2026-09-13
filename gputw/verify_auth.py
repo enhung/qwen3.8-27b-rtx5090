@@ -37,7 +37,9 @@ def load_key(filename):
 
 
 def request_status(origin, method, path, key=None, body=None):
-    headers = {}
+    # GPUtw's Cloudflare edge rejects urllib's default Python-urllib user agent
+    # with a platform-level 403 before the request reaches the container.
+    headers = {"User-Agent": "qwen38-gputw-verify/1.0"}
     if key is not None:
         headers["Authorization"] = "Bearer " + key
     if body is not None:
