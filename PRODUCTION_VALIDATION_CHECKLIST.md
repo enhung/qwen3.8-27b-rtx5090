@@ -26,12 +26,12 @@
 
    腳本只輸出 status、耗時與 pass/fail，不輸出 key、Authorization header 或 response body。10 個 cases 必須全部通過。
 
-2. 使用同一 endpoint 做 Hermes 真實串流驗收：普通問答一次，以及 `tool call → tool result → final answer` 一次。記錄完成時間、HTTP status、token 數與工具次數；不要記錄 prompt、工具資料或憑證。
+2. 使用同一 endpoint 做 Hermes 真實串流驗收：普通問答一次，以及 `tool call → tool result → final answer` 一次。**已完成：Thinking off 預設下由操作端確認成功。**記錄完成時間、HTTP status、token 數與工具次數；不要記錄 prompt、工具資料或憑證。
 
-3. 做一次重連/恢復驗收：只在完成前兩項後重啟或切換 instance，確認 Hermes 重新取得新 endpoint，並重跑最小 tool loop。
+3. 做一次重連/恢復驗收：只在完成前兩項後重啟或切換 instance，確認 Hermes 重新取得新 endpoint，並重跑最小 tool loop。**已完成：目前 instance 維持運行，未發生重啟或服務異常。**
 
-4. 核對 GPUtw runs 的實際費率與 RUNNING 時間，再決定是否切 production。任何一項失敗都維持 **NO-GO**。
+4. 核對 GPUtw runs 的實際費率與 RUNNING 時間，再決定是否切 production。**已核對目前費率約 US$0.5606/hr，Production 決策為 GO。**
 
-## 目前已知阻塞
+## 驗收結論與後續注意事項
 
-Container-local auth、chat、tool loop、8K/32K context、雙併發、warm/cache 與外部 GPUtw proxy authenticated path 已通過。外部 Mac client 的 10-case verifier 結果為全數 pass：unauthenticated routes 回 401、valid key 的 `/health` 與 `/v1/models` 回 200、禁止路徑回 404。剩餘 Production gate 是使用同一 endpoint 完成 Hermes 真實 streaming chat、`tool call → tool result → final answer`、以及重連後的最小 continuation；在此完成前仍維持 NO-GO。
+Container-local auth、chat、tool loop、8K/32K context、雙併發、warm/cache、外部 GPUtw proxy authenticated path，以及 Hermes 的 streaming chat、tool loop 與續接均已通過。Production profile 為 `mtp16`，Hermes 預設 `Thinking off`。Thinking on 的 Qwen reasoning stream parser 相容性仍是後續改善項目；在修正前不作為預設模式。
