@@ -1,0 +1,51 @@
+name: Publish clean GPUtw public image
+
+on:
+  push:
+    branches:
+      - codex/gputw-agent-p1-auth
+    paths:
+      - .github/workflows/publish-gputw-public.yml
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    if: github.repository == 'enhung/qwen3.8-27b-rtx5090'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SOURCE_IMAGE: ghcr.io/enhung/qwen38-rtx5090:p1-auth-8bb725447c375defe57c2f47c4ffaa68980aa1c4-34966497205@sha256:4300b6b1d392066c27db653da87f241fcc1c21782f618a49809b1c0911233d05
+      PUBLIC_IMAGE: ghcr.io/enhung/qwen38-rtx5090-public:release
+    steps:
+      - name: Login to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+      - name: Copy the scanned immutable image
+        run: |
+          docker pull "$SOURCE_IMAGE"
+          docker tag "$SOURCE_IMAGE" "$PUBLIC_IMAGE"
+          docker push "$PUBLIC_IMAGE"
+          docker buildx imagetools inspect "$PUBLIC_IMAGE"
+
+      - name: Make only the clean package public
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl --fail-with-body -sS -X PATCH \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            https://api.github.com/user/packages/container/qwen38-rtx5090-public \
+            -d '{"visibility":"public"}' >/tmp/package-visibility.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/package-visibility.json'))
+          assert d.get('visibility') == 'public', d
+          print('package visibility:', d['visibility'])
+          PY
