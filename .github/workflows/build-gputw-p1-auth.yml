@@ -38,6 +38,21 @@ jobs:
           docker image inspect "$IMAGE" --format '{{json .Config.Entrypoint}}' |
             python3 -c 'import json,sys; assert json.load(sys.stdin) == ["/app/entrypoint-auth.sh"]'
 
+      - name: Scan image for secrets and host keys
+        run: |
+          docker image inspect "$IMAGE" --format '{{json .Config.Env}}' |
+            python3 -c 'import json,sys; env=json.load(sys.stdin); assert not [x for x in env if any(k in x.split("=",1)[0].upper() for k in ("KEY","TOKEN","PASSWORD","SECRET"))], "sensitive-looking env name"'
+          docker run --rm --entrypoint sh "$IMAGE" -lc '
+            set -eu
+            test ! -e /vault/qwen38/config/api_key
+            test -z "$(find /etc/ssh -maxdepth 1 -type f -name "ssh_host_*_key" -print -quit 2>/dev/null)"
+            hits="$(grep -RIl --binary-files=without-match -E \
+              "gputw_live_[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY" \
+              /app --exclude-dir=unsloth-nvfp4-env 2>/dev/null || true)"
+            test -z "$hits"
+            echo "image secret scan: clean"
+          '
+
       - name: Login to GHCR
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}

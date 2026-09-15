@@ -27,6 +27,10 @@ unset API_KEY_FILE
 # the Vault-backed apt lists mount with an Invalid cross-device link error.
 if command -v sshd >/dev/null 2>&1; then
   mkdir -p /run/sshd
+  # Generate unique host keys at runtime after build-time keys were removed.
+  if ! compgen -G "/etc/ssh/ssh_host_*_key" >/dev/null; then
+    ssh-keygen -A
+  fi
   /usr/sbin/sshd
 fi
 
