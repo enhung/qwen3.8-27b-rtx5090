@@ -7,8 +7,8 @@ set -euo pipefail
 PROFILE_FILE="${QWEN_PROFILE_FILE:-/vault/qwen38/config/profile}"
 profile="${1:-}"
 case "$profile" in
-  light|light16|mtp16) ;;
-  *) echo "usage: $0 {light|light16|mtp16}" >&2; exit 2 ;;
+  bootstrap|light|light16|mtp16) ;;
+  *) echo "usage: $0 {bootstrap|light|light16|mtp16}" >&2; exit 2 ;;
 esac
 
 if ! tr '\0' ' ' < /proc/1/cmdline | grep -q 'profile-supervisor.sh'; then

@@ -7,6 +7,7 @@ set -euo pipefail
 # starts the selected profile with the same authenticated middleware.
 
 PROFILE_FILE="${QWEN_PROFILE_FILE:-/vault/qwen38/config/profile}"
+DEFAULT_PROFILE="${QWEN_DEFAULT_PROFILE:-light}"
 MODEL_DIR="${MODEL_DIR:-/vault/qwen38/models/qwen3.8-27b-nvfp4}"
 MAX_JOBS="${MAX_JOBS:-2}"
 NVCC_THREADS="${NVCC_THREADS:-2}"
@@ -19,8 +20,23 @@ restart_requested=0
 profile_args() {
   local profile="$1"
   case "$profile" in
-    # Bootstrap profiles must bind the health port before GPUtw's startup
-    # deadline; MTP/full CUDA graphs are enabled after readiness via mtp16.
+    # Bootstrap binds the health port before GPUtw's startup deadline; the
+    # production profile is enabled after readiness via switch-profile.sh.
+    bootstrap)
+      printf '%s\0' \
+        --served-model-name qwen3.8-27b \
+        --host 0.0.0.0 --port 8000 \
+        --max-model-len 32768 \
+        --enforce-eager \
+        --gpu-memory-utilization 0.90 \
+        --max-num-seqs 1 \
+        --kv-cache-dtype fp8 \
+        --enable-prefix-caching \
+        --reasoning-parser qwen3 \
+        --enable-auto-tool-choice \
+        --tool-call-parser qwen3_xml \
+        --trust-remote-code
+      ;;
     light)
       printf '%s\0' \
         --served-model-name qwen3.8-27b \
@@ -74,13 +90,13 @@ profile_args() {
 }
 
 read_profile() {
-  local profile="light"
+  local profile="$DEFAULT_PROFILE"
   if [[ -r "$PROFILE_FILE" ]]; then
     IFS= read -r profile < "$PROFILE_FILE" || true
   fi
   case "$profile" in
-    light|light16|mtp16) printf '%s' "$profile" ;;
-    *) printf 'light' ;;
+    bootstrap|light|light16|mtp16) printf '%s' "$profile" ;;
+    *) printf '%s' "$DEFAULT_PROFILE" ;;
   esac
 }
 
