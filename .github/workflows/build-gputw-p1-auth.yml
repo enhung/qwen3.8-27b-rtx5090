@@ -23,6 +23,7 @@ jobs:
     timeout-minutes: 30
     env:
       IMAGE: ghcr.io/enhung/qwen38-rtx5090:p1-auth-${{ github.sha }}-${{ github.run_id }}
+      PUBLIC_IMAGE: ghcr.io/enhung/qwen38-rtx5090-public:release-eager
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -63,3 +64,9 @@ jobs:
         run: |
           docker push "$IMAGE"
           docker buildx imagetools inspect "$IMAGE"
+
+      - name: Publish scanned eager bootstrap image
+        run: |
+          docker tag "$IMAGE" "$PUBLIC_IMAGE"
+          docker push "$PUBLIC_IMAGE"
+          docker buildx imagetools inspect "$PUBLIC_IMAGE"
