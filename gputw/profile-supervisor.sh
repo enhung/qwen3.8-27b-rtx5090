@@ -19,11 +19,14 @@ restart_requested=0
 profile_args() {
   local profile="$1"
   case "$profile" in
+    # Bootstrap profiles must bind the health port before GPUtw's startup
+    # deadline; MTP/full CUDA graphs are enabled after readiness via mtp16.
     light)
       printf '%s\0' \
         --served-model-name qwen3.8-27b \
         --host 0.0.0.0 --port 8000 \
         --max-model-len 131072 \
+        --enforce-eager \
         --gpu-memory-utilization 0.95 \
         --max-num-seqs 4 \
         --kv-cache-dtype fp8 \
@@ -38,6 +41,7 @@ profile_args() {
         --served-model-name qwen3.8-27b \
         --host 0.0.0.0 --port 8000 \
         --max-model-len 131072 \
+        --enforce-eager \
         --gpu-memory-utilization 0.95 \
         --max-num-seqs 16 \
         --kv-cache-dtype fp8 \
