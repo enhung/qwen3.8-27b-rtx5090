@@ -1,0 +1,59 @@
+name: Inspect GPUtw image before visibility change
+
+on:
+  push:
+    branches:
+      - codex/gputw-agent-p1-auth
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  inspect:
+    if: github.repository == 'enhung/qwen3.8-27b-rtx5090'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      IMAGE: ghcr.io/enhung/qwen38-rtx5090:p1-auth-1973a4eb8add626c77d791ecea63d1ce64d0adb7-34771120435@sha256:6e23342db6616a8c41200680ad602d5c20615675dc18fe06350fa0913c10c1d4
+    steps:
+      - name: Login to GHCR for read-only inspection
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+      - name: Pull pinned image
+        run: docker pull "$IMAGE"
+
+      - name: Check image metadata without printing values
+        run: |
+          docker image inspect "$IMAGE" --format '{{json .Config.Env}}' |
+            python3 -c 'import json,sys; env=json.load(sys.stdin); print("sensitive-looking env names:", [x.split("=",1)[0] for x in env if any(k in x.split("=",1)[0].upper() for k in ("KEY","TOKEN","PASSWORD","SECRET"))])'
+          docker history --no-trunc "$IMAGE" | grep -Eiq '(secret|token|password|api.?key|--build-arg)' && {
+            echo 'sensitive-looking image history metadata found'; exit 1;
+          } || true
+
+      - name: Scan image files for credential material
+        run: |
+          docker run --rm --entrypoint sh "$IMAGE" -lc '
+            set -eu
+            roots="/app /etc /root /opt"
+            hits="$(grep -RIl --binary-files=without-match -E \
+              "gputw_live_[A-Za-z0-9]|ghp_[A-Za-z0-9]|github_pat_[A-Za-z0-9]|BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|Bearer [A-Za-z0-9_-]{24,}" \
+              $roots 2>/dev/null || true)"
+            if [ -n "$hits" ]; then
+              echo "$hits" | sed "s#^#credential-pattern:#"
+              exit 1
+            fi
+            echo "credential pattern scan: clean"
+          '
+
+      - name: Verify expected runtime files only
+        run: |
+          docker run --rm --entrypoint sh "$IMAGE" -lc '
+            test -x /app/entrypoint-auth.sh
+            test -f /app/gputw_auth_middleware.py
+            test ! -e /vault/qwen38/config/api_key
+            echo "runtime image layout: clean"
+          '
