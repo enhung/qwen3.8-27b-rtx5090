@@ -26,10 +26,10 @@ profile_args() {
       printf '%s\0' \
         --served-model-name qwen3.8-27b \
         --host 0.0.0.0 --port 8000 \
-        --max-model-len 32768 \
+        --max-model-len 98304 \
         --enforce-eager \
-        --gpu-memory-utilization 0.90 \
-        --max-num-seqs 1 \
+        --gpu-memory-utilization 0.95 \
+        --max-num-seqs 8 \
         --kv-cache-dtype fp8 \
         --enable-prefix-caching \
         --reasoning-parser qwen3 \
