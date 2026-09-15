@@ -1,0 +1,72 @@
+name: Build GPUtw P1 auth image
+
+# workflow_dispatch requires the workflow file on the default branch.
+# The feature branch push trigger lets us build P1 without merging into main.
+on:
+  push:
+    branches:
+      - codex/gputw-agent-p1-auth
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: gputw-p1-auth-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'enhung/qwen3.8-27b-rtx5090'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      IMAGE: ghcr.io/enhung/qwen38-rtx5090:p1-auth-${{ github.sha }}-${{ github.run_id }}
+      PUBLIC_IMAGE: ghcr.io/enhung/qwen38-rtx5090-public:release-eager
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Run P1 local tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Build isolated image
+        run: docker build --platform linux/amd64 -f Dockerfile.gputw-auth -t "$IMAGE" .
+
+      - name: Check middleware import and entrypoint
+        run: |
+          docker run --rm --entrypoint python "$IMAGE" -c 'import gputw_auth_middleware; print("middleware import OK")'
+          docker image inspect "$IMAGE" --format '{{json .Config.Entrypoint}}' |
+            python3 -c 'import json,sys; assert json.load(sys.stdin) == ["/app/entrypoint-auth.sh"]'
+
+      - name: Scan image for secrets and host keys
+        run: |
+          docker image inspect "$IMAGE" --format '{{json .Config.Env}}' |
+            python3 -c 'import json,sys; env=json.load(sys.stdin); assert not [x for x in env if any(k in x.split("=",1)[0].upper() for k in ("KEY","TOKEN","PASSWORD","SECRET"))], "sensitive-looking env name"'
+          docker run --rm --entrypoint sh "$IMAGE" -lc '
+            set -eu
+            test ! -e /vault/qwen38/config/api_key
+            test -z "$(find /etc/ssh -maxdepth 1 -type f -name "ssh_host_*_key" -print -quit 2>/dev/null)"
+            hits="$(grep -RIl --binary-files=without-match -E \
+              "gputw_live_[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY" \
+              /app --exclude-dir=unsloth-nvfp4-env 2>/dev/null || true)"
+            test -z "$hits"
+            echo "image secret scan: clean"
+          '
+
+      - name: Login to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+      - name: Push P1 image and show immutable digest
+        run: |
+          docker push "$IMAGE"
+          docker buildx imagetools inspect "$IMAGE"
+
+      - name: Publish scanned eager bootstrap image
+        run: |
+          docker tag "$IMAGE" "$PUBLIC_IMAGE"
+          docker push "$PUBLIC_IMAGE"
+          docker buildx imagetools inspect "$PUBLIC_IMAGE"

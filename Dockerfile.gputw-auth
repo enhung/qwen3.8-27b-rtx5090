@@ -1,0 +1,20 @@
+# P1-only GPUtw image. The v2 image remains the rollback artifact.
+FROM ghcr.io/enhung/qwen38-rtx5090:v2@sha256:6f2f5c227aea70f48cd53c650626640723d6a93cca4b2bdf6865058c71cb0298
+LABEL org.opencontainers.image.source="https://github.com/enhung/qwen3.8-27b-rtx5090"
+
+COPY gputw/auth_middleware.py /app/gputw_auth_middleware.py
+COPY gputw/entrypoint-auth.sh /app/entrypoint-auth.sh
+COPY gputw/SAFE_BASELINE.sh /app/SAFE_BASELINE.sh
+COPY gputw/profile-supervisor.sh /app/profile-supervisor.sh
+COPY gputw/switch-profile.sh /app/switch-profile.sh
+# Never bake shared SSH host private keys into a distributable image.
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /etc/ssh/ssh_host_*_key /etc/ssh/ssh_host_*_key.pub \
+    && mkdir -p /run/sshd
+RUN chmod 0755 /app/entrypoint-auth.sh /app/SAFE_BASELINE.sh \
+    /app/profile-supervisor.sh /app/switch-profile.sh
+ENV PYTHONPATH=/app
+
+ENTRYPOINT ["/app/entrypoint-auth.sh"]

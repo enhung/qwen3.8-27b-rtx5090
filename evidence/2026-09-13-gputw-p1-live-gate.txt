@@ -1,0 +1,60 @@
+GPUtw P1 live gate evidence (UTC)
+
+P1 image: ghcr.io/enhung/qwen38-rtx5090:p1-auth-31a67e3732b70d05c7c1b758129585d0320b6539-34719491022@sha256:e8b34e248f7a97758df88dd50d312bbb321c3b5daecd0f3982187c812312c7a0
+
+Attempt 1: instance e39079b7-ce9d-477d-a2bd-8f0400d59c21 on 117 GB RTX 5090 node 72ca950b-53b3-4a19-b19e-92b6ffcdc8fc. Created 2026-09-12T21:45:23Z at US$0.6731/hour. Status reached FAILED after STARTING; no failureReason, events, or pod logs remained. runs endpoint returned zero records.
+
+Attempt 2: instance ca0b2de4-8e50-4dac-a30b-348f62a1a15c on the same node, created 2026-09-12T22:04:05Z with explicit Light flags plus --enforce-eager to diagnose graph-capture timeout. It reached STARTING and logs showed safetensors loading with no OOM, missing-file, permission, or traceback signals. At 2026-09-12T22:17Z active list still showed DEPLOYING. Stop requests then encountered intermittent Cloudflare/API no-response; final stopped state was not confirmed in this evidence file.
+
+Follow-up after user reported service ready (2026-09-12 UTC): the same second instance reached RUNNING/ready. Resources reported US$0.6731/hour and zero extra port fee; one billing run started 2026-09-12T22:18:18Z. The container-local auth matrix passed 10/10 using the Vault key without returning it to the client. GET /health and GET /v1/models required the key; valid requests returned 200; POST /invocations, GET /metrics and GET /docs returned 404 with or without the key. A minimal chat completion returned HTTP 200 for model qwen3.8-27b. A tool-choice smoke produced one get_weather tool call with finish_reason tool_calls. External unauthenticated probes to the public GPUtw endpoint returned /health 401, /v1/models 401, /invocations 404, /metrics 404 and /docs 404. Requests from inside the container to the public proxy returned 403 due to the proxy owner/session layer, so external valid-key behavior still needs a separate trusted client (for example Hermes).
+
+The test instance was stopped after these checks; active list returned zero. No long-context, throughput, or complete Hermes continuation was run. Production remains NO-GO until the trusted external valid-key and Hermes gates pass.
+
+Persistent run (instance c2b173c7-b356-45fd-babb-bf606b017bf0, created 2026-09-12T22:58Z):
+- Reached RUNNING/ready after approximately 16 minutes and was intentionally kept running for follow-up evaluation.
+- Agent loop passed: tool call HTTP 200 (2.387 s), tool-result continuation HTTP 200 (0.398 s), final output present (15 completion tokens).
+- Context sanity passed on the persistent runtime: 8,192 target -> 8,208 prompt tokens / 0.145 s; 32,768 target -> 32,784 / 0.307 s; both HTTP 200.
+- Parallel sanity passed: two concurrent requests, both HTTP 200, wall 0.262 s; prompt tokens 6,160 each.
+- Instance remains RUNNING for P2 cache/readiness observation; no stop request was sent in this run.
+
+P2 cache/readiness observation (same persistent c2b173c7 instance):
+- GPUtw status remained RUNNING/Running/ready=true with restartCount=0. Resource snapshot reported 1x RTX 5090 32GB, 117 GB RAM, 24 vCPU, 8 GB shm, 584 GB disk; vRAM 29,603 MiB (90.3%) at the sample time and hourly compute rate US$0.6731.
+- Container cache discovery found `/root/.cache/flashinfer` (27 MB), `/root/.cache/vllm` (103 MB, including the model-info cache), `/tmp/root/cutlass_python_cache` (4 KB), and `/tmp/torchinductor_root` (4 KB). The model mount's `.cache` was only 20 KB. No API-key values were emitted.
+- Repeating the exact 73,728-character (~8K-token) streaming prompt twice on localhost produced HTTP 200 both times. First request first-byte/total latency was 1.034/1.112 s; second request was 0.162/0.240 s. This is a warm/prefix-cache signal, not a cold-start measurement; cold start remains approximately 16 minutes from the earlier live runs.
+- The existing Web UI port 8000 was explicitly set to GPUtw `public` mode (no extra port fee), but the public hostname still returned platform-level HTTP 401 even with the container bearer key; this request therefore did not reach the middleware. A temporary raw TCP exposure (assigned `tcp.gputw.ai:20017`) was created to isolate that layer, could not be reached from the external client, and was deleted immediately. No raw exposure remains.
+
+Production validation preparation (new key file, same endpoint):
+- `gputw/verify_auth.py` ran all 10 cases against `https://8000-c2b173c7-b356-45fd-babb-bf606b017bf0.gputw.ai`; every request returned platform-level HTTP 403, including no-key, wrong-key, and valid-key cases. The script exited non-zero. This confirms the external client is blocked before the container middleware and cannot serve as a valid-key production gate from this network path.
+- Using the same scoped GPUtw key through `instances:exec`, the container-local authenticated `/health` check returned HTTP 200. The persistent service is therefore healthy; the remaining blocker is the GPUtw external proxy/session path, not vLLM readiness or the P1 middleware.
+
+Shutdown (user requested):
+- Instance `c2b173c7-b356-45fd-babb-bf606b017bf0` stop API returned `status=STOPPED`; a follow-up status query returned `STOPPED`, `ready=false`, and `restartCount=0`.
+- The stopped instance currently records `byoSshEnabled=false`. Next deployment must set `customImage.sshEnabled=true`; SSH access is therefore planned for the next deployment rather than retrofitted onto this stopped custom-image instance.
+
+SSH-enabled production validation run (instance 16bbe34e-7c13-4e5c-af40-d0d3f3f9bde2, created 2026-09-13T12:20:26Z):
+- Created from the same pinned P1 image on the same 117 GB RTX 5090 node with `byoSshEnabled=true` and Web UI port 8000. It reached `RUNNING/ready=true` at uptime 946 s and remained ready at 1,043 s (over the 17-minute budget), with no restart or failure reason.
+- SSH connection to `pod-16bbe34e-7c13-4e5c-af40-d0d3f3f9bde2@ssh.gputw.ai:2222` was rejected with `Permission denied (publickey)`. The service flag is enabled, but an account SSH public key still needs to be added in GPUtw Dashboard → SSH Keys.
+- Container-local authenticated `/health` through `instances:exec` returned HTTP 200. The external 10-case auth matrix against the new endpoint returned platform-level HTTP 403 for every case, so external valid-key/Hermes acceptance remains blocked before middleware.
+
+P3 53 GB host run (instance 2e86b442-359c-4075-9853-c7ee534c6b77, created 2026-09-13T13:14:49Z):
+- Same pinned P1 image with `byoSshEnabled=true` on RTX 5090 32GB / 53 GB RAM / 24 vCPU / 577 GB disk at US$0.5606/hour (no extra port fee). It reached `RUNNING/ready=true` at uptime 859 s and remained ready at uptime 1,623 s; restartCount stayed 0 and failureReason stayed null.
+- SSH login succeeded and the SSH command returned `SSH_OK HEALTH_200`. The client printed a non-fatal `client_global_hostkeys_prove_confirm` RSA signature warning; the command and health check completed successfully.
+- SSH-local auth matrix passed 10/10: valid `/health` and `/v1/models` returned 200, missing/wrong credentials returned 401, and `/invocations`, `/metrics`, `/docs` returned 404.
+- Agent tool loop passed: `get_weather` tool call HTTP 200 (0.816 s), tool-result continuation HTTP 200 (0.843 s), final content present (128 chars, 64 completion tokens).
+- Context sanity passed: 8,192-character probe -> 6,196 prompt tokens / 0.593 s; 32,768-character probe -> 24,628 prompt tokens / 2.161 s; both HTTP 200. Long-context probes also passed: 276,697-character prompt -> 43,741 prompt tokens / 5.414 s; 506,654-character prompt -> 80,050 prompt tokens / 8.672 s; both HTTP 200.
+- A near-limit probe also passed: 802,218-character prompt -> 126,718 prompt tokens / 16.005 s with `max_tokens=8`, HTTP 200. After the request the instance remained `RUNNING/ready=true`, restartCount 0; resource sample was 42.6% RAM and 90.4% VRAM.
+- Parallel sanity passed: two concurrent requests both HTTP 200, wall 0.667 s, 6,196 prompt tokens each. Resource snapshot after tests showed RAM 42.6% and VRAM 90.3%.
+- External 10-case auth matrix against `https://8000-2e86b442-359c-4075-9853-c7ee534c6b77.gputw.ai` returned platform-level HTTP 403 for every case, so the P3 host itself passes container/SSH gates but not the external proxy gate.
+- After the user set Web UI port 8000 to public, GPUtw API readback confirmed `allowedPorts=[8000]`, `portAccess.8000.mode=public`, `hasPassword=false`, and `extraPortFee=0`. A fresh external 10-case matrix still returned platform-level HTTP 403 for every case (including valid and missing keys), so the public flag is recorded but requests remain blocked at the GPUtw proxy/session layer before the container middleware.
+
+P3 Light concurrency benchmark (same instance, server `max-num-seqs=4`, 2026-09-13 UTC):
+- 32K, C1/C2/C4/C8 (3 timed batches each): output throughput 48/62/77/79 tok/s; TTFT p50 2.32/3.60/6.07/12.38 s. C8 increased aggregate throughput only marginally over C4 while adding queueing latency.
+- 64K, C1/C2/C4 (3 timed batches each): output throughput 27/32/35 tok/s; TTFT p50 6.23/9.36/15.64 s. C8 was then run as a queueing stress case (2 timed batches): 36 tok/s, TTFT p50 29.45 s, E2E p95 56.85 s. C16 was excluded from the KV-pool-safe matrix.
+- C16 stress (2 timed batches each, deliberately overriding the benchmark pool guard): 32K output 80 tok/s, TTFT p50 25.09 s, E2E p95 51.36 s; 64K output 36 tok/s, TTFT p50 57.48 s, E2E p95 112.67 s. These are client-concurrency/queueing results under `max-num-seqs=4`, not engine scaling at 16 simultaneous sequences. Raw JSON: `benchmarks/results/2026-09-13_14-04-26_parallel.json`, `2026-09-13_14-08-11_parallel.json`, `2026-09-13_14-14-21_parallel.json`.
+
+Continuation run (instance d4600e1e-e846-453b-93ca-c4b73c94b9e3, 2026-09-12 UTC):
+- Cold start reached RUNNING/ready after approximately 16 minutes on the same 117 GB RTX 5090 node.
+- Complete local Agent loop passed: tool call HTTP 200 (0.416 s), tool result continuation HTTP 200 (0.278 s), final content present (15 completion tokens).
+- Context sanity passed: target 8,192 -> 8,208 prompt tokens, HTTP 200, 0.673 s; target 32,768 -> 32,784 prompt tokens, HTTP 200, 2.925 s.
+- Two-request parallel sanity passed: both HTTP 200, wall 0.930 s; prompt tokens 6,160 each.
+- Instance stopped after tests; active list returned zero. These are container-local Agent/context/parallel checks; full Hermes external continuation and production load test remain pending.

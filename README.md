@@ -7,6 +7,18 @@ on a single RTX 5090 (32 GB) through [vLLM](https://github.com/vllm-project/vllm
 The API is OpenAI-compatible and includes a 256K-token context,
 reasoning, and auto tool choice.
 
+> **GPUtw / Hermes Agent deployment:** The existing GPUtw Light baseline is a
+> separate 131072-context, 4-sequence profile. It does not use the generic
+> Docker Compose defaults described below. See [CURRENT_STATE.md](CURRENT_STATE.md),
+> [AGENT_DEPLOYMENT_EVALUATION.md](AGENT_DEPLOYMENT_EVALUATION.md),
+> [gputw/SAFE_BASELINE.sh](gputw/SAFE_BASELINE.sh), and [SECURITY.md](SECURITY.md).
+> The isolated P1 auth image in `Dockerfile.gputw-auth` has been built and
+> published by GitHub Actions; container-local checks, the external GPUtw
+> authenticated proxy matrix, and Hermes streaming/tool-loop acceptance pass
+> with Thinking off. The production profile is `mtp16` with request-level
+> Thinking disabled by default. The build and live
+> gate sequence is in [P1_DEPLOYMENT_RUNBOOK.md](P1_DEPLOYMENT_RUNBOOK.md).
+
 It ships two serve modes: the base **light** setup (no MTP, 16 concurrent
 sequences, shared-host defaults) and an **MTP speculative-decoding**
 override tuned for a dedicated card. At `0.965` GPU-memory utilization the
@@ -111,6 +123,19 @@ shared-host profile, drop the `-f docker-compose.mtp.yml` — and if those
 two keys are set in `.env`, remove them too (otherwise the `.env` values
 keep applying to the base file; with both unset, the base defaults
 `16` / `0.95` kick in).
+
+### Switching profiles on one GPUtw instance
+
+The GPUtw auth image can run a small profile supervisor as PID 1. This keeps
+the instance alive while vLLM is restarted as a child process, so profile
+changes do not require a new instance. From SSH, run
+`/app/switch-profile.sh light16` for the Light `max-num-seqs=16` experiment or
+`/app/switch-profile.sh mtp16` for MTP-2 with the same sequence cap; use
+`/app/switch-profile.sh light` to return to the conservative baseline. The
+selected profile is stored under `/vault/qwen38/config/profile`, and the
+service is ready again only after authenticated `GET /health` returns 200.
+The first switch still pays vLLM startup/JIT time, but subsequent switches
+reuse the same GPUtw instance and its persistent model/cache state.
 
 ### MTP (dedicated card)
 
@@ -269,6 +294,19 @@ bit. Re-measure with
 and run counts are env-configurable — `BENCH_LEVELS`, `BENCH_CONTEXTS`,
 `BENCH_RUNS`; `--quick` for a fast sanity check; raw runs land in
 `benchmarks/results/`).
+
+#### P3 Light concurrency check (53 GB host)
+
+The 2026-09-13 P3 run used the SSH-enabled Light profile (`max-num-seqs=4`,
+three timed batches per safe combination). At 32K, aggregate output was 48,
+62, 77, and 79 tok/s at client C1/C2/C4/C8, with TTFT p50 of 2.32, 3.60,
+6.07, and 12.38 s. At 64K, C1/C2/C4/C8 produced 27, 32, 35, and 36 tok/s,
+with TTFT p50 of 6.23, 9.36, 15.64, and 29.45 s. C16 was measured separately as a
+queueing stress case: 80 tok/s at 32K (TTFT p50 25.09 s, E2E p95 51.36 s)
+and 36 tok/s at 64K (TTFT p50 57.48 s, E2E p95 112.67 s). C8/C16 therefore
+describe client-side queueing under `max-num-seqs=4`, not 8/16 simultaneous
+engine sequences. Raw JSON is in `benchmarks/results/` and the live evidence
+file.
 
 ## Requirements
 
@@ -548,6 +586,14 @@ stack, regenerate the lock from a working container:
 
 ```
 Dockerfile                          vLLM + flashinfer + CUTLASS DSL image (NVFP4)
+Dockerfile.gputw-auth               P1-only GPUtw auth layer on v2 rollback image
+.github/workflows/build-gputw-p1-auth.yml  branch-only P1 GHCR build
+gputw/                             frozen GPUtw Light invocation and auth middleware
+gputw/verify_auth.py               external P1 auth matrix (no key or response-body logging)
+PRODUCTION_VALIDATION_CHECKLIST.md external valid-key / Hermes production gate sequence
+CURRENT_STATE.md                    GPUtw handoff facts versus current verification
+SECURITY.md                         P1 public API security design and live gates
+ON_DEMAND_ARCHITECTURE.md           Agent lease / safe shutdown design (P4)
 requirements.lock                   frozen Python stack of the known-good container (196 packages)
 docker-compose.yml                  service definition (ports, volumes, serve flags; light mode)
 docker-compose.mtp.yml              MTP override file (ideal-usage tuning: 3 seqs / 0.965, dedicated card)
